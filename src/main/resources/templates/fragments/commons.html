@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css" th:href="@{css/style.css}" />
+    <link rel="stylesheet" type="text/css" href="/static/css/admin.css" th:href="@{css/admin.css}"/>
+    <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/4.5.3/css/bootstrap.min.css" th:href="@{webjars/bootstrap/4.5.3/css/bootstrap.min.css}"/>
+    <script src="webjars/bootstrap/4.5.3/js/bootstrap.bundle.min.js" th:src="@{webjars/bootstrap/4.5.3/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{webjars/jquery/3.5.1/jquery.min.js}" src="webjars/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<header class="container navbar navbar-expand-md navbar-dark semi-back " th:fragment="commonHeader(index)">
+    <nav class="navbar navbar-inverse">
+        <h2 class="navbar-brand p-0 " style="color:#ccd1d8"> 演示系统</h2>
+        <ul class="nav nav-tabs nav-justified">
+            <li class="nav-item" >
+                <a class="nav-link  active" href="#">拓扑展示</a>
+            </li>
+            <li class="nav-item" >
+                <a class="nav-link text-light " href="#">功能扩展</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link text-light " href="#">功能扩展</a>
+            </li>
+            <li class="nav-item" >
+                <a class="nav-link text-light " href="#">功能扩展</a>
+            </li>
+        </ul>
+    </nav>
+
+<!--    <ul class="navbar-nav flex-row flex-wrap bd-navbar-nav pt-2 py-md-0">-->
+<!--        <li class="nav-item col-6 col-md-auto" >-->
+<!--            <a href="/" th:style="${index}==0?'color:white':''">-->
+<!--                <img th:src="@{icons/bezier.svg}" src="css/" /> <span >拓扑展示</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li class="nav-item col-6 col-md-auto" >-->
+<!--            <a href="/" th:style="${index}==1?'color:white':''">-->
+<!--                <img th:src="@{icons/bezier.svg}" src="css/" /> <span >扩展功能</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li class="nav-item col-6 col-md-auto" >-->
+<!--            <a href="/" th:style="${index}==2?'color:white':''">-->
+<!--                <img th:src="@{icons/bezier.svg}" src="css/" /> <span >扩展功能</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li class="nav-item col-6 col-md-auto" >-->
+<!--            <a href="/" th:style="${index}==3?'color:white':''">-->
+<!--                <img th:src="@{icons/bezier.svg}" src="css/" /> <span >扩展功能</span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--    </ul>-->
+</header>
+
+
+
+<footer class="navbar-fixed-bottom semi-back am-footbar"  th:fragment="commonFooter">
+    <div class="container">
+        Copyright © 2020 - 2024 BUPT. All Rights Reserved
+    </div>
+</footer>
+
+</body>
+</html>

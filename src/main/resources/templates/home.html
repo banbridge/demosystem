@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>捷变时空弹性网络仿真演示系统</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css" th:href="@{css/style.css}" />
+    <link rel="stylesheet" type="text/css" href="webjars/bootstrap/4.5.3/css/bootstrap.min.css" th:href="@{webjars/bootstrap/4.5.3/css/bootstrap.min.css}"/>
+    <script src="webjars/bootstrap/4.5.3/js/bootstrap.bundle.min.js" th:src="@{webjars/bootstrap/4.5.3/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{webjars/jquery/3.5.1/jquery.min.js}" src="webjars/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<header>
+    <div th:replace="~{fragments/commons :: commonHeader(0)}">
+    </div>
+</header>
+
+<canvas id="cas"></canvas>
+
+
+
+<footer class="m-auto" th:replace="~{fragments/commons :: commonFooter}">BUPT</footer>
+</body>
+</html>

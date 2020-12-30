@@ -1,0 +1,60 @@
+
+body
+{
+    background-image:url(../image/background.jpg);
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+    background-position:0px 0px;
+    background-size:100% 100%;
+}
+
+
+html, body {
+    height: 100%;
+}
+
+.wrapper {
+    position: relative;
+    min-height: 100%;
+    padding-bottom: 50px;
+    box-sizing: border-box;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    height: 50px;
+    text-align: center;
+}
+
+.semi-back{
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.am-topbar{
+    color: #cbccd0;
+    position: relative;
+    min-height: 50px;
+    margin-bottom: 1.6rem;
+    border-width: 0 0 1px;
+    border-style: solid;
+    border-color: #dddddd;
+}
+
+
+.am-footbar{
+    clear: both;
+    display: block;
+    text-align: center;
+    margin: 0 auto;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    color: aliceblue;
+}
+
+
+
+ul li a:hover{
+    color: white;
+}
