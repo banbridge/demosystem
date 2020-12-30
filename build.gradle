@@ -25,10 +25,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'mysql:mysql-connector-java'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // https://mvnrepository.com/artifact/org.webjars/webjars-locator
+    implementation group: 'org.webjars', name: 'webjars-locator', version: '0.40'
     // https://mvnrepository.com/artifact/org.webjars/bootstrap
     implementation group: 'org.webjars', name: 'bootstrap', version: '4.5.3'
     // https://mvnrepository.com/artifact/org.webjars.bower/jquery
     implementation group: 'org.webjars.bower', name: 'jquery', version: '3.5.1'
+    // https://mvnrepository.com/artifact/org.webjars/visjs
+    implementation group: 'org.webjars', name: 'visjs', version: '4.21.0'
+    // https://mvnrepository.com/artifact/org.webjars.npm/axios
+    implementation group: 'org.webjars.npm', name: 'axios', version: '0.21.1'
+
+
+
 
 
 }

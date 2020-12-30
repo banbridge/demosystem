@@ -7,7 +7,7 @@ spring:
 
   thymeleaf:
     suffix: .html
-    mode: HTML5
+    mode: HTML
     cache: false
     servlet:
       content-type: text/html
@@ -16,6 +16,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    open-in-view: true
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

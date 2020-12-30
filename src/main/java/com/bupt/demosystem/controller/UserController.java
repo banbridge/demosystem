@@ -10,15 +10,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class UserController {
 
-    @RequestMapping("/")
-    public String homePage(){
-        return "home";
-    }
-
     @RequestMapping("/hello")
     @ResponseBody
     public String hello(){
         return "Hello Word";
     }
+
 
 }
