@@ -15,18 +15,6 @@ const tooltip = new G6.Tooltip({
     itemTypes: ['node']
 });
 
-function findAllPath() {
-    const selectedNodes = graph.findAllByState('node', 'selected');
-    if (selectedNodes.length !== 2) {
-        alert('Please select TWO nodes!\n\r请选择有且两个节点！');
-        return;
-    }
-    clearStates();
-    const {findAllPath} = G6.Algorithm;
-    const allPaths = findAllPath(graph, selectedNodes[0].getID(), selectedNodes[1].getID());
-    alert(allPaths);
-
-}
 
 function findShortPath() {
     const selectedNodes = graph.findAllByState('node', 'selected');
@@ -98,20 +86,20 @@ function getData(net, id_canvas) {
         }
         switch (node.class) {
             case "0":
-                node.size = 60;
-                node.style.fill = '#9c073d'
+                node.size = 51;
+                node.style.fill = colorls[0]
                 node.style.stroke = '#686f77'
                 node.style.lineWidth = 1
                 break
             case "1":
-                node.size = 50;
-                node.style.fill = '#095ea0'
+                node.size = 38;
+                node.style.fill = colorls[1]
                 node.style.stroke = '#686f77'
                 node.style.lineWidth = 1
                 break;
             case "2":
-                node.size = 40;
-                node.style.fill = '#0d930d'
+                node.size = 25;
+                node.style.fill = colorls[2]
                 node.style.stroke = '#686f77'
                 node.style.lineWidth = 1
                 break;
@@ -129,7 +117,8 @@ function getData(net, id_canvas) {
         if (!edge.style) {
             edge.style = {};
         }
-        edge.style.lineWidth = 3;
+        edge.style.lineWidth = 2;
+        edge.style.stroke = "#929fba";
 
     })
 
@@ -150,13 +139,13 @@ function drawNet(net, id_canvas) {
         container: id_canvas,
         width: con_width,
         height: con_height,
-        animate: true,
+
+        fitView: true,
         layout: {
             type: 'random',
-            preventOverlap: true,
-            linkDistance: 300,
-            nodeStrength: -30,
-            edgeStrength: 0.1
+            gatherDiscrete: true,
+            descreteGravity: 200,
+            maxIteration: 2000,
         },
         modes: {
             default: ['drag-node', 'click-select',],
@@ -175,20 +164,14 @@ function drawNet(net, id_canvas) {
         },
         defaultEdge: {
             type: 'circle-running',
-            autoRotate: true,
-            size: 1,
-            color: 'rgb(43,183,96)',
-            style: {
-                opacity: 0.4,
-                lineAppendWidth: 3,
-            },
+
         },
         nodeStateStyles: {
             hover: {
                 fill: 'lightsteelblue'
             },
             click: {
-                stroke: '#000',
+                stroke: '#201c1c',
                 lineWidth: 3
             }
         },
@@ -284,56 +267,3 @@ G6.registerEdge(
     },
     'cubic',
 ); // 该自定义边继承内置三阶贝塞尔曲线 cubic
-
-// custom the edge
-G6.registerEdge(
-    'running-polyline',
-    {
-        afterDraw(cfg, group) {
-            const shape = group.get('children')[0];
-            const length = shape.getTotalLength();
-            let circleCount = Math.ceil(length / 20);
-            circleCount = circleCount === 0 ? 1 : circleCount;
-
-            const _loop = function _loop(i) {
-                const delay = Math.random() * 1000;
-                const start = shape.getPoint(i / circleCount);
-                const circle = group.addShape('circle', {
-                    attrs: {
-                        x: start.x,
-                        y: start.y,
-                        r: 0.8,
-                        fill: '#A0F3AF',
-                        shadowColor: '#fff',
-                        shadowBlur: 30,
-                    },
-                    name: 'circle-shape',
-                });
-                circle.animate(
-                    (ratio) => {
-                        ratio += i / circleCount;
-                        if (ratio > 1) {
-                            ratio %= 1;
-                        }
-                        const tmpPoint = shape.getPoint(ratio);
-                        return {
-                            x: tmpPoint.x,
-                            y: tmpPoint.y,
-                        };
-                    },
-                    {
-                        repeat: true,
-                        duration: 10 * length,
-                        easing: 'easeCubic',
-                        delay,
-                    },
-                );
-            };
-
-            for (let i = 0; i < circleCount; i++) {
-                _loop(i);
-            }
-        },
-    },
-    'polyline',
-);

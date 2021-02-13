@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <title>网络节点实时分析</title>
+    <link rel="stylesheet" type="text/css" th:href="@{css/style.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{css/admin.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
+    <script type="text/javascript" th:src="@{webjars/jquery/jquery.min.js}"></script>
+    <script type="text/javascript" th:src="@{js/g6.min.js}"></script>
+    <script type="text/javascript" th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
+    <script type="text/javascript" th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <script type="text/javascript" th:src="@{js/websocket.js}"></script>
+    <script type="text/javascript" th:src="@{webjars/stomp-websocket/stomp.min.js}"></script>
+    <script type="text/javascript" th:src="@{webjars/sockjs-client/sockjs.min.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/commons :: commonHeader(1)}">
+</header>
+
+
+<div class="row">
+    <div class="col-1 "></div>
+    <div class="col-10 text-white">
+        <div class="card bg-light gyb-box">
+            <h1 class="text-success" id="test_websocket">12345</h1>
+            <h2 class="text-success" id="test_ip">12345</h2>
+            <pre class=" form-control rounded-0 " id="debug_info" style="height: 300px">12345</pre>
+        </div>
+    </div>
+</div>
+
+<footer class="m-auto" th:replace="~{fragments/commons :: commonFooter}">BUPT</footer>
+
+
+<script type="text/javascript" th:inline="javascript">
+
+    let host = window.location.host;
+    $("#test_ip").text(host);
+    createWebSocket("1234");
+
+</script>
+
+</body>
+</html>

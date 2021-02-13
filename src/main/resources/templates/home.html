@@ -12,12 +12,11 @@
     <script th:src="@{webjars/axios/dist/axios.min.js}"></script>
     <script th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
     <script th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <script th:src="@{js/admin.js}"></script>
+    <script th:src="@{js/home.js}"></script>
 </head>
 <body>
-<header>
-    <div th:replace="~{fragments/commons :: commonHeader(0)}">
-    </div>
+
+<header th:replace="~{fragments/commons :: commonHeader(0)}">
 </header>
 
 <div class="row">
@@ -35,8 +34,6 @@
                 <form class="form-inline">
                     <label for="num_node" class="text-center">节点个数:</label>
                     <input type="number" id="num_node" class="form-control col-3" value="20"/>
-                    <label for="num_edge">边数:</label>
-                    <input type="number" id="num_edge" class="form-control col-3" value="40"/>
                     <button type="button" class="btn btn-info" onclick="upgradeNet(1)">生成网络</button>
                 </form>
                 <button class="btn btn-info" data-toggle="tooltip" data-placement="top"
@@ -68,7 +65,6 @@
             dataType: "JSON",
             data: {
                 num_node: $('#num_node').val(),
-                num_edge: $('#num_edge').val(),
             },
             error: function () {
                 alert("获取失败");

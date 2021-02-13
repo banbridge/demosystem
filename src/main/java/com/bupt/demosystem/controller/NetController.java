@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpSession;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.UUID;
+
 /**
  * Created by Banbridge on 2020/12/30.
  */
@@ -22,6 +27,7 @@ public class NetController {
 
     @RequestMapping("/")
     public ModelAndView homePage() {
+
         ModelAndView mv = new ModelAndView();
         mv.setViewName("home");
         return mv;
@@ -29,10 +35,9 @@ public class NetController {
 
     @RequestMapping("/upgradeNet")
     @ResponseBody
-    public Network upgradeNet(Integer num_node, Integer num_edge) {
+    public Network upgradeNet(Integer num_node) {
         if (num_node == null) num_node = 20;
-        if (num_edge == null) num_edge = 40;
-        Network net = netCreateService.getNetwork(num_node, num_edge);
+        Network net = netCreateService.getNetwork(num_node);
         return net;
     }
 

@@ -35,6 +35,11 @@ dependencies {
     implementation group: 'org.webjars', name: 'visjs', version: '4.21.0'
     // https://mvnrepository.com/artifact/org.webjars.npm/axios
     implementation group: 'org.webjars.npm', name: 'axios', version: '0.21.1'
+    // https://mvnrepository.com/artifact/org.webjars/stomp-websocket
+    implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.3-1'
+    // https://mvnrepository.com/artifact/org.webjars/sockjs-client
+    implementation group: 'org.webjars', name: 'sockjs-client', version: '1.1.2'
+
 
 
 

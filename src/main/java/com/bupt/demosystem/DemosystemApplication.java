@@ -1,5 +1,6 @@
 package com.bupt.demosystem;
 
+import com.bupt.demosystem.config.WebSocketEndpoint;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
