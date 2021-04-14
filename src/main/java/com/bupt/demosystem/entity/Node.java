@@ -12,6 +12,16 @@ public class Node {
     private int type;
     private int x;
     private int y;
+    private int cluster;
+    private double invulnerability;
+
+    public double getInvulnerability() {
+        return invulnerability;
+    }
+
+    public void setInvulnerability(double invulnerability) {
+        this.invulnerability = invulnerability;
+    }
 
     public Node(int id, String ip) {
         this.id = id;
@@ -75,5 +85,14 @@ public class Node {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+
+    public int getCluster() {
+        return cluster;
+    }
+
+    public void setCluster(int cluster) {
+        this.cluster = cluster;
     }
 }

@@ -1,5 +1,8 @@
-let colorls = new Array("#9c073d", "#095ea0", "#0d930d");
-let types = new Array("主干节点", "支干节点", "边缘节点");
+let colorls = ["#f1ddce", "#d9e7d1", "#0eaae6"];
+let types = ["A类子网节点", "B类子网节点", "C类子网节点"];
+let cluster_colors = ['lightgreen', 'lightblue', 'rgba(117,132,161,0.19)'];
+let clusters = [];
+let cluster_members = null;
 
 const tooltip = new G6.Tooltip({
     offsetX: 70,
@@ -8,8 +11,10 @@ const tooltip = new G6.Tooltip({
         const outDiv = document.createElement('span');
         outDiv.innerHTML = `
         <li>ip: ${e.item.getModel().label}</li>
+        <li >节点抗毁值：${e.item.getModel().invulnerability}</li>
         <li>负载量: ${e.item.getModel().cap}%</li>
-        <li>节点类型: ${types[e.item.getModel().class]}</li>`
+        <li>节点类型: ${types[e.item.getModel().class]}</li>
+        <li>cluster: ${e.item.getModel().cluster}</li>`
         return outDiv
     },
     itemTypes: ['node']
@@ -22,35 +27,64 @@ function findShortPath() {
         alert('Please select TWO nodes!\n\r请选择有且两个节点！');
         return;
     }
-
+    let startID = selectedNodes[0].getID();
+    let endID = selectedNodes[1].getID()
     clearStates();
-    const {findShortestPath} = G6.Algorithm;
-    const {path} = findShortestPath(graph, selectedNodes[0].getID(), selectedNodes[1].getID());
-    const pathNodeMap = {};
-    path.forEach(id => {
-        const pathNode = graph.findById(id);
-        pathNode.toFront();
-        graph.setItemState(pathNode, 'highlight', true);
-        pathNodeMap[id] = true;
-    });
-    graph.getEdges().forEach(edge => {
-        const edgeModel = edge.getModel();
-        const source = edgeModel.source;
-        const target = edgeModel.target;
-        const sourceInPathIdx = path.indexOf(source);
-        const targetInPathIdx = path.indexOf(target);
-        if (sourceInPathIdx === -1 || targetInPathIdx === -1) return;
-        if (Math.abs(sourceInPathIdx - targetInPathIdx) === 1) {
-            graph.setItemState(edge, 'highlight', true);
-        } else {
-            graph.setItemState(edge, 'inactive', true);
+    //const {path} = findShortestPath(graph, selectedNodes[0].getID(), selectedNodes[1].getID());
+    //let { length, path, allPath } = findShortestPath(graph, selectedNodes[0].getID(), selectedNodes[1].getID());
+    $.ajax({
+        url: "/getShortPath",
+        type: "GET",
+        dataType: "JSON",
+        data: {
+            start: startID,
+            end: endID
+        },
+        error: function () {
+            alert("获取失败");
+        },
+        success(path) {
+            path = path.map(String);
+            const pathNodeMap = {};
+            path.forEach(id => {
+                const pathNode = graph.findById(id);
+                pathNode.toFront();
+                graph.setItemState(pathNode, 'highlight', true);
+                pathNodeMap[id] = true;
+            });
+            graph.getEdges().forEach(edge => {
+                const edgeModel = edge.getModel();
+                const source = edgeModel.source;
+                const target = edgeModel.target;
+                let sourceInPathIdx = -1;
+                let targetInPathIdx = -1;
+                for (let i = 0; i < path.length - 1; i++) {
+                    if ((path[i] === source && path[i + 1] === target) || (path[i + 1] === source && path[i] === target)) {
+
+                        sourceInPathIdx = i;
+                        targetInPathIdx = i + 1;
+                    }
+                }
+                if (sourceInPathIdx === -1 || targetInPathIdx === -1) return;
+
+                if (Math.abs(sourceInPathIdx - targetInPathIdx) === 1) {
+                    graph.setItemState(edge, 'highlight', true);
+                } else {
+                    graph.setItemState(edge, 'inactive', true);
+                }
+            });
+            graph.getNodes().forEach(node => {
+                if (!pathNodeMap[node.getID()]) {
+                    graph.setItemState(node, 'inactive', true);
+                }
+                if (node.getID() === startID || node.getID() === endID) {
+                    graph.clearItemStates(node);
+                }
+            });
         }
     });
-    graph.getNodes().forEach(node => {
-        if (!pathNodeMap[node.getID()]) {
-            graph.setItemState(node, 'inactive', true);
-        }
-    });
+
+
 }
 
 const clearStates = () => {
@@ -62,128 +96,88 @@ const clearStates = () => {
     });
 }
 
-function getData(net, id_canvas) {
-    let container = document.getElementById(id_canvas);
-    let con_width = container.clientWidth;
-    let con_height = container.clientHeight;
-    let nodes = new Array();
-    let edges = new Array();
+function updateNet(net, id_convas) {
+    let new_data = getData(net, id_convas);
+    graph.read(new_data);
+    //graph.changeData(new_data);
+    graph.changeData()
+    drawHulls();
 
-    net.nodeList.forEach(function (node) {
-        nodes.push({
-            id: node.id + "",
-            label: node.ip,
-            class: node.type + "",
-            x: node.x * con_width / 100,
-            y: node.y * con_height / 100,
-            cap: node.capacity
-        })
-    })
-
-    nodes.forEach(function (node) {
-        if (!node.style) {
-            node.style = {};
-        }
-        switch (node.class) {
-            case "0":
-                node.size = 51;
-                node.style.fill = colorls[0]
-                node.style.stroke = '#686f77'
-                node.style.lineWidth = 1
-                break
-            case "1":
-                node.size = 38;
-                node.style.fill = colorls[1]
-                node.style.stroke = '#686f77'
-                node.style.lineWidth = 1
-                break;
-            case "2":
-                node.size = 25;
-                node.style.fill = colorls[2]
-                node.style.stroke = '#686f77'
-                node.style.lineWidth = 1
-                break;
-        }
-    });
-
-    net.edgeList.forEach(function (edge) {
-        edges.push({
-            source: edge.from + "",
-            target: edge.to + "",
-        })
-    });
-
-    edges.forEach(function (edge) {
-        if (!edge.style) {
-            edge.style = {};
-        }
-        edge.style.lineWidth = 2;
-        edge.style.stroke = "#929fba";
-
-    })
-
-    const initData = {
-        nodes: nodes,
-        edges: edges,
-    }
-    return initData;
 }
 
 function drawNet(net, id_canvas) {
-    var container = document.getElementById(id_canvas);
-    var con_width = container.clientWidth;
-    var con_height = container.clientHeight;
+    const container = document.getElementById(id_canvas);
+    const con_width = container.clientWidth;
+    const con_height = container.clientHeight;
 
-    data1 = getData(net, id_canvas);
+    if (typeof window !== 'undefined')
+        window.onresize = () => {
+            if (!graph || graph.get('destroyed')) return;
+            if (!container || !container.scrollWidth || !container.scrollHeight) return;
+            graph.changeSize(container.scrollWidth, container.scrollHeight - 20);
+        };
+
     graph = new G6.Graph({
         container: id_canvas,
         width: con_width,
         height: con_height,
-
+        linkCenter: true,
         fitView: true,
         layout: {
-            type: 'random',
-            gatherDiscrete: true,
-            descreteGravity: 200,
-            maxIteration: 2000,
+            preventOverlap: true,
         },
+        animate: true,
         modes: {
-            default: ['drag-node', 'click-select',],
+            default: ['drag-node', 'click-select', 'lasso-select', "drag-combo"],
             edit: []
         },
         plugins: [tooltip],
         defaultNode: {
-            labelCfg: {
-                autoRotate: true,
-                position: 'bottom'
-            },
+            size: 40,
             style: {
-                fill: '#000104',
+                stroke: '#686f77',
+                lineWidth: 1,
+            },
 
-            }
         },
         defaultEdge: {
-            type: 'circle-running',
-
+            type: 'line',
+            style: {
+                lineWidth: 1,
+                stroke: "rgb(93,93,93)",
+            },
         },
+
         nodeStateStyles: {
             hover: {
                 fill: 'lightsteelblue'
             },
             click: {
                 stroke: '#201c1c',
-                lineWidth: 3
+                lineWidth: 2
+            },
+            highlight: {
+                fill: 'lightsteelblue'
+            },
+            inactive: {
+                fill: 'rgb(117,120,124, 0.12)'
             }
         },
         edgeStateStyles: {
             click: {
                 stroke: 'steelblue'
+            },
+            highlight: {
+                stroke: '#e61f3a'
+            },
+            inactive: {
+                stroke: 'rgba(140,143,165,0.1)',
             }
         }
     })
-
-    graph.data(data1);
-    graph.render();
+    let data1 = getData(net, id_canvas);
+    //console.log(data1);
+    graph.read(data1);
 
     graph.on('node:mouseenter', (e) => {
         const nodeItem = e.item;
@@ -217,6 +211,8 @@ function drawNet(net, id_canvas) {
         graph.setItemState(edgeItem, 'click', true); // 设置当前边的 click 状态为 true
     });
 
+    //graph.on('afterlayout', drawHulls());
+    graph.on('aftergraphrefresh', drawHulls());
 
     graph.on('canvas:click', e => {
         clearStates();
@@ -224,46 +220,122 @@ function drawNet(net, id_canvas) {
 
 }
 
+function drawHulls() {
+    //alert("开始画轮廓包裹");
+    cluster_members = Object.values(cluster_members)
+    graph.removeHulls();
+    for (let i = 0; i < cluster_members.length; i++) {
+        //console.log(cluster_members[i])
+        let mems = [];
+        for (let j = 0; j < cluster_members[i].length; j++) {
+            mems.push(cluster_members[i][j] + "");
+        }
+        //console.log(mems);
+        const hull1 = graph.createHull({
+            id: 'hull' + i,
+            type: 'round-convex',
+            members: mems,
+            padding: 10,
+            style: {
+                fill: cluster_colors[i % cluster_colors.length],
+                stroke: 'green',
+            },
+        });
+        clusters.push(hull1);
+    }
+
+    for (let i = 0; i < clusters.length; i++) {
+        clusters[i].updateData(clusters[i].members)
+    }
+}
+
+function getData(net, id_canvas) {
+    let container = document.getElementById(id_canvas);
+    let con_width = container.clientWidth;
+    let con_height = container.clientHeight;
+    let nodes = [];
+    let edges = [];
+    $("#value_of_net").text(net.netValue.toFixed(3));
+    cluster_members = net.clusters;
+    //console.log(net.nodeList)
+    //console.log(con_width)
+    //console.log(con_height)
+
+    net.nodeList.forEach(function (node) {
+        nodes.push({
+            id: node.id + "",
+            label: node.ip,
+            class: node.type + "",
+            x: node.x / 100 * con_width,
+            y: node.y / 100 * con_height,
+            cap: node.capacity,
+            invulnerability: node.invulnerability,
+            cluster: node.cluster
+        })
+    })
+    $("#num_node").val(nodes.length + "");
+    //console.log(nodes);
+
+    nodes.forEach(function (node) {
+        if (!node.style) {
+            node.style = {};
+        }
+        switch (node.class) {
+            case "0":
+                node.style.fill = colorls[0]
+                break
+            case "1":
+                node.style.fill = colorls[1]
+                break;
+            case "2":
+                node.style.fill = colorls[2]
+                break;
+        }
+    });
+
+    net.edgeList.forEach(function (edge) {
+        edges.push({
+            source: edge.from + "",
+            target: edge.to + "",
+        })
+    });
+
+    return {
+        nodes: nodes,
+        edges: edges,
+        // combos: combos,
+    };
+}
+
+const lineDash = [4, 2, 1, 2];
 
 G6.registerEdge(
-    'circle-running',
+    'line-dash',
     {
         afterDraw(cfg, group) {
-            // 获得当前边的第一个图形，这里是边本身的 path
+            // get the first shape in the group, it is the edge's path here=
             const shape = group.get('children')[0];
-            // 边 path 的起点位置
-            const startPoint = shape.getPoint(0);
-
-            // 添加红色 circle 图形
-            const circle = group.addShape('circle', {
-                attrs: {
-                    x: startPoint.x,
-                    y: startPoint.y,
-                    fill: 'red',
-                    r: 3,
-                },
-                // must be assigned in G6 3.3 and later versions. it can be any value you want
-                name: 'circle-shape',
-            });
-
-            // 对红色圆点添加动画
-            circle.animate(
-                (ratio) => {
-                    // 每一帧的操作，入参 ratio：这一帧的比例值（Number）。返回值：这一帧需要变化的参数集（Object）。
-                    // 根据比例值，获得在边 path 上对应比例的位置。
-                    const tmpPoint = shape.getPoint(ratio);
-                    // 返回需要变化的参数集，这里返回了位置 x 和 y
-                    return {
-                        x: tmpPoint.x,
-                        y: tmpPoint.y,
+            let index = 0;
+            // Define the animation
+            shape.animate(
+                () => {
+                    index++;
+                    if (index > 9) {
+                        index = 0;
+                    }
+                    const res = {
+                        lineDash,
+                        lineDashOffset: -index,
                     };
+                    // returns the modified configurations here, lineDash and lineDashOffset here
+                    return res;
                 },
                 {
-                    repeat: true, // 动画重复
-                    duration: 3000,
+                    repeat: true, // whether executes the animation repeatly
+                    duration: 3000, // the duration for executing once
                 },
-            ); // 一次动画的时间长度
+            );
         },
     },
-    'cubic',
-); // 该自定义边继承内置三阶贝塞尔曲线 cubic
+    'line', // extend the built-in edge 'cubic'
+);

@@ -5,41 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
     <title>网络节点实时分析</title>
     <link rel="stylesheet" type="text/css" th:href="@{css/style.css}"/>
-    <link rel="stylesheet" type="text/css" th:href="@{css/admin.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
-    <script type="text/javascript" th:src="@{webjars/jquery/jquery.min.js}"></script>
-    <script type="text/javascript" th:src="@{js/g6.min.js}"></script>
-    <script type="text/javascript" th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
-    <script type="text/javascript" th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <script type="text/javascript" th:src="@{js/websocket.js}"></script>
-    <script type="text/javascript" th:src="@{webjars/stomp-websocket/stomp.min.js}"></script>
-    <script type="text/javascript" th:src="@{webjars/sockjs-client/sockjs.min.js}"></script>
 </head>
 <body>
 <header th:replace="~{fragments/commons :: commonHeader(1)}">
 </header>
 
 
-<div class="row">
-    <div class="col-1 "></div>
-    <div class="col-10 text-white">
-        <div class="card bg-light gyb-box">
-            <h1 class="text-success" id="test_websocket">12345</h1>
-            <h2 class="text-success" id="test_ip">12345</h2>
-            <pre class=" form-control rounded-0 " id="debug_info" style="height: 300px">12345</pre>
+<div class="row" style="height: 88%">
+    <div class=" row text-white" style="height: 100%; width: 100%">
+        <div style="width: 3%"></div>
+        <div class="card bg-light gyb-box" style="height: 99%; width: 70%" id="g_id_net">
+
+        </div>
+        <div class="card bg-light gyb-box col-3" style="height: 50%; width: 30%">
+            <div style="height: 100%; " id="g_id_node">
+
+            </div>
         </div>
     </div>
 </div>
 
 <footer class="m-auto" th:replace="~{fragments/commons :: commonFooter}">BUPT</footer>
 
-
+<script type="text/javascript" th:src="@{webjars/jquery/jquery.min.js}"></script>
+<script type="text/javascript" th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
+<script type="text/javascript" th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
+<script type="text/javascript" th:src="@{js/analyse.js}"></script>
+<script th:src="@{js/g6.min.js}"></script>
+<script type="text/javascript" th:src="@{webjars/stomp-websocket/stomp.min.js}"></script>
+<script type="text/javascript" th:src="@{webjars/sockjs-client/sockjs.min.js}"></script>
+<script type="text/javascript" th:src="@{webjars/echarts/echarts.min.js}"></script>
 <script type="text/javascript" th:inline="javascript">
+    initAnalyse();
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
 
-    let host = window.location.host;
-    $("#test_ip").text(host);
-    createWebSocket("1234");
-
+    if (typeof window !== 'undefined')
+        window.onresize = () => {
+            if (!graph || graph.get('destroyed')) return;
+            if (!container || !container.scrollWidth || !container.scrollHeight) return;
+            graph.changeSize(container.scrollWidth, container.scrollHeight - 20);
+        };
 </script>
 
 </body>

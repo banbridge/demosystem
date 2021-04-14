@@ -10,7 +10,8 @@
     <script th:src="@{webjars/jquery/3.5.1/jquery.min.js}" src="webjars/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
-<header class="container navbar navbar-expand-md navbar-dark semi-back " th:fragment="commonHeader(index)">
+<header class="container navbar navbar-expand-md navbar-dark semi-back " style="height: 7%"
+        th:fragment="commonHeader(index)">
     <nav class="navbar navbar-inverse">
         <h2 class="navbar-brand p-0 " style="color:#ccd1d8"> 演示系统</h2>
         <ul class="nav nav-tabs nav-justified">
@@ -37,6 +38,79 @@
         Copyright © 2020 - 2024 BUPT. All Rights Reserved
     </span>
 </footer>
+
+<div class="modal fade" id="home_networkList">
+    <div class="modal-dialog modal-lg networklist-modal">
+        <div class="modal-content" id="home_table">
+            <!-- 模态框头部 -->
+            <div class="modal-header">
+                <h4 class="modal-title">已生成网络列表</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- 模态框主体 -->
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>节点数</th>
+                        <th>连接数</th>
+                        <th>创建时间</th>
+                        <th>抗毁度值</th>
+                        <th>簇个数</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="network : ${networks}">
+                        <td th:text="${network.nodeList.size()}"></td>
+                        <td th:text="${network.edgeList.size()}"></td>
+                        <td th:text="${network.modifiedTime}"></td>
+                        <td th:text="${network.netValue}"></td>
+                        <td th:text="${network.clusters.size()}"></td>
+                        <td>
+                            <a th:onclick="loadNewNet([[${network}]])" title="加载此网络">
+                                <img th:src="@{icons/加载.png}" width="25" height="25"/></a>
+                            <a th:onclick="deleteNet([[${network.id}]], [[${pageNumber}]])" title="删除此网络">
+                                <img th:src="@{icons/删除.png}" alt="Bootstrap" width="25" height="25"/></a>
+
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 模态框底部 -->
+            <div class="modal-footer">
+                <div class="row">
+                    <!--此处pageInfo是mybatisplus自带分页生成的分页信息，包含records：值，total：总数
+                        current：当前页，pages：所有页等-->
+                    <span class="text-secondary text-center" style="margin-right: 5px">
+                        [[${pageNumber}]]/[[${totalPages}]]页,总[[${totalNet}]]条数据
+                    </span>
+                    <div>
+                        <ul class="pagination">
+                            <li class="page-item" th:classappend="${pageNumber}<1?'disabled':''">
+                                <a class="page-link" onClick="to_page(1)">首页</a></li>
+                            <li class="page-item" th:classappend="${pageNumber}<=1?'disabled':''">
+                                <a class="page-link" th:onclick="to_page([[${pageNumber}-1]])">前一页</a></li>
+                            <li class="page-item" th:each="i :${#numbers.sequence(1,totalPages)}"
+                                th:classappend="${pageNumber}==${i}?'page-item active':'page-item' ">
+                                <a class="page-link" th:text="${i}" th:onclick="to_page([[${i}]])"></a></li>
+                            <li class="page-item"
+                                th:classappend="${pageNumber}ge${totalPages}?'disabled':''">
+                                <a class="page-link" th:onclick="to_page([[${pageNumber}+1]])">后一页</a></li>
+                            <li class="page-item"><a class="page-link" th:onclick="to_page([[${totalPages}]])">
+                                末页</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

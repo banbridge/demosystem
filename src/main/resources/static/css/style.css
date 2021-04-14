@@ -26,8 +26,12 @@ html, body {
     border-color: #dddddd;
 }
 
+.click-button {
+    margin: 0 5px 2px 5px;
+}
 
 .gyb-footbar {
+    height: 5%;
     font-size: 18px;
     text-align: center;
     padding: 10px 0;
@@ -44,7 +48,7 @@ html, body {
 }
 
 #my_network {
-    height: 650px;
+    height: 100%;
     width: 100%;
     border: 1px solid lightgray;
 }
@@ -57,4 +61,9 @@ html, body {
     background-color: rgba(255, 255, 255, 0.9);
     padding: 10px 8px;
     box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+}
+
+.networklist-modal {
+    width: auto;
+    max-height: 600px;
 }

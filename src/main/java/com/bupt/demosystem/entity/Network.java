@@ -1,24 +1,27 @@
 package com.bupt.demosystem.entity;
 
 
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Banbridge on 2020/12/30.
  */
 public class Network {
-    private int id;
+
+    private Integer id;
+    //节点列表
     private List<Node> nodeList;
+    //
     private List<Edge> edgeList;
-    private int cost[][];
+    private HashMap<Integer, LinkedList<Integer>> clusters;
+    private String modifiedTime;
+    //抗毁度值
+    private double netValue;
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public List<Node> getNodeList() {
         return nodeList;
@@ -36,11 +39,32 @@ public class Network {
         this.edgeList = edgeList;
     }
 
-    public int[][] getCost() {
-        return cost;
+    public HashMap<Integer, LinkedList<Integer>> getClusters() {
+        return clusters;
     }
 
-    public void setCost(int[][] cost) {
-        this.cost = cost;
+    public void setClusters(HashMap<Integer, LinkedList<Integer>> clusters) {
+        this.clusters = clusters;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+
+    public String getModifiedTime() {
+        return modifiedTime;
+    }
+
+    public void setModifiedTime(String modifiedTime) {
+        this.modifiedTime = modifiedTime;
+    }
+
+    public double getNetValue() {
+        return netValue;
+    }
+
+    public void setNetValue(double netValue) {
+        this.netValue = netValue;
     }
 }
