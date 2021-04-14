@@ -70,13 +70,11 @@ public class NetController {
     @RequestMapping("/getShortPath")
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
-        ArrayList<Integer> ans = new ArrayList<>();
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(NetUtil.getMapFromNetWork(NetInfo.getNet()), start, end);
-        for (LinkedList list : path) {
-            ans.addAll(list);
-        }
+        //ArrayList<Integer> ans = new ArrayList<>();
+        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(NetInfo.getNet(), start, end);
+
         logger.info("getShortPath");
-        return ans;
+        return path;
     }
 
     //从数据库加载网络

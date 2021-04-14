@@ -44,31 +44,46 @@ function findShortPath() {
             alert("获取失败");
         },
         success(path) {
-            path = path.map(String);
+            //path = path.map(String);
+            //console.log(path);
             const pathNodeMap = {};
-            path.forEach(id => {
-                const pathNode = graph.findById(id);
-                pathNode.toFront();
-                graph.setItemState(pathNode, 'highlight', true);
-                pathNodeMap[id] = true;
-            });
+            path.forEach(p => {
+                //console.log(p)
+                //p = p.split(',');
+                p.forEach(id => {
+                    id = id + "";
+                    const pathNode = graph.findById(id);
+                    //pathNode.toFront();
+                    graph.setItemState(pathNode, 'highlight', true);
+                    pathNodeMap[id] = true;
+                });
+            })
             graph.getEdges().forEach(edge => {
                 const edgeModel = edge.getModel();
                 const source = edgeModel.source;
                 const target = edgeModel.target;
                 let sourceInPathIdx = -1;
                 let targetInPathIdx = -1;
-                for (let i = 0; i < path.length - 1; i++) {
-                    if ((path[i] === source && path[i + 1] === target) || (path[i + 1] === source && path[i] === target)) {
+                let cnt = 0;
+                //console.log(path.length)
+                for (let i = 0; i < path.length; i++) {
+                    path[i] = path[i].map(String)
+                    //console.log(path[i])
+                    for (let j = 0; j < path[i].length; j++) {
 
-                        sourceInPathIdx = i;
-                        targetInPathIdx = i + 1;
+                        if ((path[i][j] === source && path[i][j + 1] === target) || (path[i][j + 1] === source && path[i][j] === target)) {
+                            sourceInPathIdx = i;
+                            targetInPathIdx = i + 1;
+                            cnt = i;
+                            break;
+                        }
                     }
+
                 }
                 if (sourceInPathIdx === -1 || targetInPathIdx === -1) return;
 
                 if (Math.abs(sourceInPathIdx - targetInPathIdx) === 1) {
-                    graph.setItemState(edge, 'highlight', true);
+                    graph.setItemState(edge, (cnt === path.length - 1) ? 'click' : 'highlight', true);
                 } else {
                     graph.setItemState(edge, 'inactive', true);
                 }
@@ -100,7 +115,7 @@ function updateNet(net, id_convas) {
     let new_data = getData(net, id_convas);
     graph.read(new_data);
     //graph.changeData(new_data);
-    graph.changeData()
+    // graph.changeData()
     drawHulls();
 
 }
@@ -144,7 +159,7 @@ function drawNet(net, id_canvas) {
             type: 'line',
             style: {
                 lineWidth: 1,
-                stroke: "rgb(93,93,93)",
+                stroke: "rgba(6,12,19,0.34)",
             },
         },
 
@@ -165,13 +180,15 @@ function drawNet(net, id_canvas) {
         },
         edgeStateStyles: {
             click: {
-                stroke: 'steelblue'
+                stroke: 'steelblue',
+                lineWidth: 4
             },
             highlight: {
-                stroke: '#e61f3a'
+                stroke: '#e24759',
+                lineWidth: 3
             },
             inactive: {
-                stroke: 'rgba(140,143,165,0.1)',
+                stroke: 'rgba(103,103,98,0.1)',
             }
         }
     })
@@ -244,9 +261,11 @@ function drawHulls() {
         clusters.push(hull1);
     }
 
-    for (let i = 0; i < clusters.length; i++) {
-        clusters[i].updateData(clusters[i].members)
-    }
+    clusters.forEach(cluster => {
+        cluster.updateData(cluster.members)
+    })
+
+
 }
 
 function getData(net, id_canvas) {

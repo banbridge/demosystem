@@ -1,11 +1,9 @@
 package com.bupt.demosystem.util;
 
-import org.springframework.data.relational.core.sql.In;
+import com.bupt.demosystem.entity.Network;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by Banbridge on 2021/1/26.
@@ -53,6 +51,29 @@ public class ShortPath {
         return path;
     }
 
+
+    //network得到两点之间的最短路径，并按抗毁值从小到大排序
+    public static ArrayList<LinkedList<Integer>> multiPath(Network network, int source, int target) {
+        ArrayList<LinkedList<Integer>> paths = multiPath(NetUtil.getMapFromNetWork(network), source, target);
+        ArrayList<PathSort> pathSorts = new ArrayList<>();
+        paths.forEach(path -> {
+            PathSort ps = new PathSort();
+            double pathVale = 0;
+            for (Integer id : path) {
+                pathVale += network.getNodeList().get(id).getInvulnerability();
+            }
+            ;
+            ps.setPathVale(pathVale);
+            ps.setPath(path);
+            pathSorts.add(ps);
+        });
+        Collections.sort(pathSorts);
+        ArrayList<LinkedList<Integer>> ans = new ArrayList<>();
+        pathSorts.forEach(ps -> {
+            ans.add(ps.getPath());
+        });
+        return paths;
+    }
 
     //Dijkstra算法 中的多邻接点与多条最短路径问题
     public static ArrayList<LinkedList<Integer>> multiPath(int[][] map, int source, int target) {
@@ -134,4 +155,30 @@ class MultiArrayList {
         this.arrayList = new ArrayList();
     }
 
+}
+
+class PathSort implements Comparable<PathSort> {
+    private double pathVale;
+    private LinkedList<Integer> path;
+
+    @Override
+    public int compareTo(PathSort o) {
+        return (int) (this.pathVale - o.pathVale);
+    }
+
+    public double getPathVale() {
+        return pathVale;
+    }
+
+    public void setPathVale(double pathVale) {
+        this.pathVale = pathVale;
+    }
+
+    public LinkedList<Integer> getPath() {
+        return path;
+    }
+
+    public void setPath(LinkedList<Integer> path) {
+        this.path = path;
+    }
 }
