@@ -238,6 +238,7 @@ function drawNet(net, id_canvas) {
 }
 
 function drawHulls() {
+    //console.log(graph.getShortestPathMatrix())
     //alert("开始画轮廓包裹");
     cluster_members = Object.values(cluster_members)
     graph.removeHulls();

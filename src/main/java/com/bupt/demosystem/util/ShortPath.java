@@ -139,14 +139,6 @@ public class ShortPath {
 
 }
 
-class MultiLinkList {
-    LinkedList<Integer> linkedList;
-
-    public MultiLinkList() {
-        this.linkedList = new LinkedList<Integer>();
-    }
-
-}
 
 class MultiArrayList {
     ArrayList<Integer> arrayList;

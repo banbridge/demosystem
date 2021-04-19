@@ -78,4 +78,10 @@ public class NetUtil {
         return ans;
     }
 
+    //得到一个节点的抗毁度
+    public static Double getOneInvulnerability(int k, int[][] map) {
+        double ans = 0;
+        return ans;
+    }
+
 }
