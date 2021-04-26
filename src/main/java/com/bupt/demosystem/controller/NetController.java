@@ -34,6 +34,11 @@ public class NetController {
         this.netService = netService;
     }
 
+    @RequestMapping(value = "test")
+    public String test() {
+        return "test";
+    }
+
     //初始页面
     @RequestMapping("/")
     public ModelAndView homePage() {

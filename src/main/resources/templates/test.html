@@ -4,23 +4,149 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 
-    <title>关于G6</title>
+    <title>模拟演示</title>
     <link rel="stylesheet" type="text/css" th:href="@{css/style.css}"/>
-    <link rel="stylesheet" type="text/css" th:href="@{css/admin.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
-    <script th:src="@{webjars/jquery/jquery.min.js}"></script>
-    <script th:src="@{js/g6.min.js}"></script>
-    <script th:src="@{webjars/axios/dist/axios.min.js}"></script>
-    <script th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
-    <script th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <script th:src="@{js/home.js}"></script>
+    <link href="/static/css/mapbox-gl.css" type="text/css" th:href="@{css/mapbox-gl.css}"/>
+
 </head>
 <body>
 <header>
     <div th:replace="~{fragments/commons :: commonHeader(3)}"></div>
 </header>
 
-</script>
+<div class="gyb-box" id="map" style="height: 90%; max-height: 90%">
 
+</div>
+
+<script th:src="@{webjars/jquery/jquery.min.js}"></script>
+<script th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
+<script th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
+<script src="/static/js/mapbox-gl.js" th:src="@{js/mapbox-gl.js}"></script>
+<script src="/static/js/turf.min.js" th:src="@{js/turf.min.js}"></script>
+
+<script type="text/javascript" th:inline="javascript">
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYmFuYnJpZGdlIiwiYSI6ImNrbm9jbWZwODEyeWkyd3FqeWlrMjBpNDkifQ.IKOlC_ndL5W8Lpa_XAVmJA';
+    let bounds = [
+        [100, 18],
+        [150, 33]
+    ];
+    let map_box = new mapboxgl.Map({
+        container: 'map',
+        zoom: 6.7,
+        bearing: 0,
+        center: [126, 25],
+        trackResize: true,
+        pitch: 55,
+        maxZoom: 8,
+        minZoom: 4,
+        maxBounds: bounds,
+        style: 'mapbox://styles/mapbox-map-design/ckhqrf2tz0dt119ny6azh975y'
+    })
+
+    let origin = [122, 27];
+    let destination = [129, 27];
+    let p1 = [125, 24], p2 = [125, 28];
+    let p3 = [122, 24], p4 = [129, 28];
+    let ps = [];
+    ps.push(origin);
+    ps.push(destination);
+    ps.push(p1);
+    ps.push(p2);
+    ps.push(p3);
+    ps.push(p4);
+    for (let i = 0; i < 10; i++) {
+        ps.push([122 + i, 22]);
+    }
+    for (let i = 0; i < 10; i++) {
+        ps.push([122, 22 + i]);
+    }
+    for (let i = 0; i < 10; i++) {
+        ps.push([131, 22 + i]);
+    }
+    for (let i = 0; i < 10; i++) {
+        ps.push([122 + i, 31]);
+    }
+    // A simple line from origin to destination.
+    let route = {
+        "type": "FeatureCollection",
+        "features": [{
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiLineString",
+                "coordinates": [
+                    [origin, destination],
+                    [p1, p2],
+                    [p3, p4]
+                ]
+            }
+        }]
+    };
+
+
+    // A single point that animates along the route.
+    // Coordinates are initially set to origin.
+    let point = {
+        "type": "FeatureCollection",
+        "features": [{
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "MultiPoint",
+                "coordinates": ps
+            }
+        }]
+    };
+
+
+    map_box.on('load', function () {
+
+        // Add a source and layer displaying a point which will be animated in a circle.
+        map_box.addSource('route', {
+            "type": "geojson",
+            "data": route
+        });
+
+        map_box.addLayer({
+            "id": "route",
+            "source": "route",
+            "type": "line",
+            "paint": {
+                "line-width": 2,
+                "line-color": "#007cbf"
+            }
+        });
+
+        map_box.addSource('point', {
+            "type": "geojson",
+            "data": point
+        });
+
+
+        map_box.loadImage("icons/carrier.png", function (error, image) {
+            if (error) throw (error);
+            console.log(image);
+            map_box.addImage("carrier", image);
+        });
+
+        map_box.addLayer({
+            "id": "point",
+            "source": "point",
+            "type": "symbol",
+            "layout": {
+                "icon-image": "carrier",
+                "icon-size": 0.3,
+                "icon-rotate": ["get", "bearing"],
+                "icon-rotation-alignment": "map",
+                "icon-allow-overlap": true,
+                "icon-ignore-placement": true
+            }
+        });
+
+    });
+
+
+</script>
 </body>
+
 </html>

@@ -44,7 +44,7 @@ html, body {
 .gyb-box {
     margin: 5px 5px;
     border: 1px solid #d3d3d3;
-    background-color: #e5e3e3;
+    background: rgba(101, 135, 160, 0.73);
 }
 
 #my_network {
@@ -66,4 +66,8 @@ html, body {
 .networklist-modal {
     width: auto;
     max-height: 600px;
+}
+
+.mapbox-logo {
+    display: none !important;
 }
