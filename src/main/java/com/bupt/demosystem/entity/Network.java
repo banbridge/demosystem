@@ -13,9 +13,8 @@ public class Network {
     private List<Node> nodeList;
     //
     private List<Edge> edgeList;
-    private HashMap<Integer, LinkedList<Integer>> clusters;
     private String modifiedTime;
-    //抗毁度值
+    //抗毁度值 
     private double netValue;
 
     public int getId() {
@@ -37,14 +36,6 @@ public class Network {
 
     public void setEdgeList(List<Edge> edgeList) {
         this.edgeList = edgeList;
-    }
-
-    public HashMap<Integer, LinkedList<Integer>> getClusters() {
-        return clusters;
-    }
-
-    public void setClusters(HashMap<Integer, LinkedList<Integer>> clusters) {
-        this.clusters = clusters;
     }
 
     public void setId(Integer id) {

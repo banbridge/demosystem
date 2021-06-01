@@ -46,7 +46,9 @@ public class NetUtil {
                 }
                 Arrays.fill(count, 0);
                 ArrayList<LinkedList<Integer>> paths = ShortPath.multiPath(map, i, j);
-                if (paths.size() < 1) continue;
+                if (paths.size() < 1) {
+                    continue;
+                }
                 for (int i_path = 0; i_path < paths.size(); i_path++) {
                     for (Integer num : paths.get(i_path)) {
                         count[num]++;

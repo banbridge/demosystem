@@ -33,7 +33,9 @@ public class ShortPath {
                     min_d = dis[j];
                 }
             }
-            if (k == -1) break;
+            if (k == -1) {
+                break;
+            }
             vis[k] = true;
             for (int j = 0; j < n; j++) {
                 if (!vis[j] && dis[k] + map[k][j] < dis[j]) {
@@ -101,7 +103,9 @@ public class ShortPath {
                     min_d = dis[j];
                 }
             }
-            if (k == -1) break;
+            if (k == -1) {
+                break;
+            }
             vis[k] = true;
             for (int j = 0; j < n; j++) {
                 if (!vis[j] && dis[k] + map[k][j] < dis[j]) {

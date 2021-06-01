@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.text.SimpleDateFormat;
 
 /**
- * Created by Banbridge on 2021/2/6.
+ * @author Banbridge
+ * @date 2021/2/6
  */
 
 @Controller()

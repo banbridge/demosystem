@@ -39,28 +39,39 @@ public class NetController {
         return "test";
     }
 
-    //初始页面
+    /**
+     * 首页面
+     *
+     * @return
+     */
     @RequestMapping("/")
     public ModelAndView homePage() {
         ModelAndView mv = new ModelAndView();
-        mv.setViewName("home");
+        mv.setViewName("vue-home");
         logger.info("homePage");
         return mv;
     }
 
-    //页面刷新问题
-    @RequestMapping("/upgradeNet")
+    /**
+     * 得到网络信息
+     *
+     * @return
+     */
+    @RequestMapping("/getNetInfo")
     @ResponseBody
-    public Network upgradeNet(Integer num_node) {
-        logger.info("upgradeNet");
+    public Network getNetInfo() {
         return NetInfo.getNet();
     }
 
-    //根据传回的节点生成新的网络
+    /**
+     * 根据传回的节点生成新的网络
+     */
     @RequestMapping("/getNewNet")
     @ResponseBody
     public Network getNewNet(Integer num_node) {
-        if (num_node == null) num_node = 20;
+        if (num_node == null) {
+            num_node = 20;
+        }
         Network net = netCreateService.getNetwork(num_node);
         NetInfo.setNetwork(net);
         logger.info("getNewNet");
@@ -122,7 +133,9 @@ public class NetController {
             } else {
                 netResult = netService.updateNetWork(net);
             }
-            if (netResult == null) return false;
+            if (netResult == null) {
+                return false;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("出现异常，保存失败");

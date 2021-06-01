@@ -15,7 +15,7 @@
 <div class="row" style="height: 88%">
     <div class="col-1 "></div>
     <div class="col-10 text-white">
-        <div class="card bg-light gyb-box" style="height: 98%">
+        <div class="card bg-light gyb-box" style="height: 98%; ">
             <h3 class="card-header bg-info">
                 网络关系图 <small>抗毁值：<span id="value_of_net">0.000</span></small>
             </h3>
@@ -67,7 +67,7 @@
 
     function loadNet(num) {
         $.ajax({
-            url: num == 0 ? "/upgradeNet" : "/getNewNet",
+            url: num == 0 ? "/getNetInfo" : "/getNewNet",
             type: "GET",
             dataType: "JSON",
             data: {

@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+/**
+ * @author banbridge
+ */
 @SpringBootApplication
 @EnableScheduling
 public class DemosystemApplication {
@@ -19,6 +22,7 @@ public class DemosystemApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DemosystemApplication.class, args);
+
     }
 
     //token: 'pk.eyJ1IjoiYmFuYnJpZGdlIiwiYSI6ImNrbm9jbWZwODEyeWkyd3FqeWlrMjBpNDkifQ.IKOlC_ndL5W8Lpa_XAVmJA',

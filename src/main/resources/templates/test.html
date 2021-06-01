@@ -7,8 +7,6 @@
     <title>模拟演示</title>
     <link rel="stylesheet" type="text/css" th:href="@{css/style.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
-    <link href="/static/css/mapbox-gl.css" type="text/css" th:href="@{css/mapbox-gl.css}"/>
-
 </head>
 <body>
 <header>
@@ -22,130 +20,219 @@
 <script th:src="@{webjars/jquery/jquery.min.js}"></script>
 <script th:src="@{webjars/popper.js/umd/popper.min.js}"></script>
 <script th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>
-<script src="/static/js/mapbox-gl.js" th:src="@{js/mapbox-gl.js}"></script>
-<script src="/static/js/turf.min.js" th:src="@{js/turf.min.js}"></script>
+<script src="../static/js/amap.js" th:src="@{js/amap.js}"></script>
+<script src="../static/js/loca.js" th:src="@{js/loca.js}"></script>
+<script src="/webjars/axios/0.21.1/dist/axios.min.js" th:src="@{webjars/axios/dist/axios.min.js}"></script>
 
 <script type="text/javascript" th:inline="javascript">
-    mapboxgl.accessToken = 'pk.eyJ1IjoiYmFuYnJpZGdlIiwiYSI6ImNrbm9jbWZwODEyeWkyd3FqeWlrMjBpNDkifQ.IKOlC_ndL5W8Lpa_XAVmJA';
     let bounds = [
         [100, 18],
         [150, 33]
     ];
-    let map_box = new mapboxgl.Map({
-        container: 'map',
-        zoom: 6.7,
-        bearing: 0,
-        center: [126, 25],
-        trackResize: true,
-        pitch: 55,
-        maxZoom: 8,
-        minZoom: 4,
-        maxBounds: bounds,
-        style: 'mapbox://styles/mapbox-map-design/ckhqrf2tz0dt119ny6azh975y'
-    })
-
-    let origin = [122, 27];
-    let destination = [129, 27];
-    let p1 = [125, 24], p2 = [125, 28];
-    let p3 = [122, 24], p4 = [129, 28];
-    let ps = [];
-    ps.push(origin);
-    ps.push(destination);
-    ps.push(p1);
-    ps.push(p2);
-    ps.push(p3);
-    ps.push(p4);
-    for (let i = 0; i < 10; i++) {
-        ps.push([122 + i, 22]);
-    }
-    for (let i = 0; i < 10; i++) {
-        ps.push([122, 22 + i]);
-    }
-    for (let i = 0; i < 10; i++) {
-        ps.push([131, 22 + i]);
-    }
-    for (let i = 0; i < 10; i++) {
-        ps.push([122 + i, 31]);
-    }
-    // A simple line from origin to destination.
-    let route = {
-        "type": "FeatureCollection",
-        "features": [{
-            "type": "Feature",
-            "geometry": {
-                "type": "MultiLineString",
-                "coordinates": [
-                    [origin, destination],
-                    [p1, p2],
-                    [p3, p4]
-                ]
-            }
-        }]
-    };
+    let origin_point = [120.3, 26];
+    let width_length = [1, 1];
+    let center_point = [124, 25];
+    let colors = ["#f1ddce", "#d9e7d1", "#0eaae6"]
+    let geo_nodes, geo_edges;
+    //[122, 131, 22, 32]
 
 
-    // A single point that animates along the route.
-    // Coordinates are initially set to origin.
-    let point = {
-        "type": "FeatureCollection",
-        "features": [{
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "MultiPoint",
-                "coordinates": ps
-            }
-        }]
-    };
-
-
-    map_box.on('load', function () {
-
-        // Add a source and layer displaying a point which will be animated in a circle.
-        map_box.addSource('route', {
-            "type": "geojson",
-            "data": route
-        });
-
-        map_box.addLayer({
-            "id": "route",
-            "source": "route",
-            "type": "line",
-            "paint": {
-                "line-width": 2,
-                "line-color": "#007cbf"
-            }
-        });
-
-        map_box.addSource('point', {
-            "type": "geojson",
-            "data": point
-        });
-
-
-        map_box.loadImage("icons/carrier.png", function (error, image) {
-            if (error) throw (error);
-            console.log(image);
-            map_box.addImage("carrier", image);
-        });
-
-        map_box.addLayer({
-            "id": "point",
-            "source": "point",
-            "type": "symbol",
-            "layout": {
-                "icon-image": "carrier",
-                "icon-size": 0.3,
-                "icon-rotate": ["get", "bearing"],
-                "icon-rotation-alignment": "map",
-                "icon-allow-overlap": true,
-                "icon-ignore-placement": true
-            }
-        });
-
+    let gaoMap = new AMap.Map('map', {
+        zoom: 8,
+        center: center_point,
+        viewMode: '3D',
+        pitch: 43,
+        resizeEnable: true,
+        showLabel: false,
+        mapStyle: 'amap://styles/darkblue',
     });
 
+    let loca = new Loca.Container({
+        map: gaoMap
+    })
+    gaoMap.on('complete', initMap);
 
+    let scale = new AMap.Scale({
+            visible: true
+        }),
+        toolBar = new AMap.ToolBar({
+            visible: true,
+            position: {
+                top: '110px',
+                right: '40px'
+            }
+        }),
+        controlBar = new AMap.ControlBar({
+            visible: true,
+            position: {
+                top: '10px',
+                right: '10px'
+            }
+        });
+    gaoMap.addControl(scale);
+    gaoMap.addControl(toolBar);
+    gaoMap.addControl(controlBar);
+
+
+    function initMap() {
+
+        axios.get('getNetInfo')
+            .then((res) => {
+                parseNetFromJson(res.data);
+                addGaoLayers();
+            })
+            .catch((e) => console.log(e))
+    }
+
+    let icons = [
+        'icons/帆船.png',
+        'icons/热气球.png'
+    ]
+
+    function addGaoLayers() {
+
+        let iconLayer = new Loca.IconLayer({
+            zIndex: 10,
+            opacity: 1,
+            visible: true,
+            zooms: [2, 22]
+        });
+
+        iconLayer.setSource(new Loca.GeoJSONSource({
+            data: geo_nodes,
+        }));
+        iconLayer.setStyle({
+            rotation: 0,
+            unit: 'px',
+            icon: (index, item) => {
+                return icons[item.properties.type % icons.length];
+            },
+            iconSize: [25, 25],
+        });
+
+        let lineLayer = new Loca.LineLayer({
+            zIndex: 10,
+            opacity: 0.6,
+            visible: true,
+            zooms: [2, 20]
+        });
+
+        lineLayer.setSource(new Loca.GeoJSONSource({
+            data: geo_edges,
+        }));
+
+        lineLayer.setStyle({
+            color: (index, item) => colors[item.properties.fromType],
+            lineWidth: 1.2,
+            altitude: (index, feature) => index * 300,
+            dashArray: [10, 0, 10, 0],
+        });
+
+        let edgeLayer = new Loca.LinkLayer({
+            zIndex: 15,
+            opacity: 1,
+            visible: true,
+            zooms: [2, 22],
+        });
+        edgeLayer.setSource(new Loca.GeoJSONSource({
+            data: geo_edges
+        }));
+        edgeLayer.setStyle({
+            lineColors: (index, item) => {
+                return [colors[item.link.properties.fromType], colors[item.link.properties.toType]]
+            },
+            height: (index, item) => 1000,
+            smoothSteps: 20,
+
+        });
+
+        let nodeLayer = new Loca.ScatterLayer({
+            zIndex: 15,
+            opacity: 1,
+            visible: true,
+            zooms: [2, 22],
+
+        });
+        nodeLayer.setSource(new Loca.GeoJSONSource({
+            data: geo_nodes,
+        }))
+        nodeLayer.setStyle({
+            color: (index, item) => colors[item.properties.type],
+            unit: 'px',
+            size: [10, 10],
+            borderWidth: 0,
+            altitude: (index, feature) => index * 500,
+
+        })
+
+        //loca.add(iconLayer);
+        loca.add(lineLayer);
+        loca.add(edgeLayer);
+        loca.add(nodeLayer);
+
+        let dat = new Loca.Dat();
+        dat.addLayer(nodeLayer, '节点');
+        dat.addLayer(edgeLayer, '连接线');
+        dat.addLayer(iconLayer, 'icon');
+        dat.addLayer(lineLayer, 'Line');
+        loca.animate.start();
+    }
+
+
+    function parseNetFromJson(net) {
+        let points = {};
+        let geo_one_node = [];
+        let geo_one_edge = [];
+        net.nodeList.forEach((node) => {
+            let p = getXY(node.x, node.y);
+            points[node.id] = p;
+            geo_one_node.push({
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': p,
+                },
+                'properties': {
+                    'ip': node.ip,
+                    'type': node.type,
+                    'cluster': node.cluster,
+                    'invulnerability': node.invulnerability,
+                    'capacity': node.capacity
+                }
+            })
+        })
+        geo_nodes = {
+            'type': 'FeatureCollection',
+            'features': geo_one_node,
+        }
+        net.edgeList.forEach((edge) => {
+            geo_one_edge.push({
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': [points[edge.from], points[edge.to]],
+                },
+                'properties': {
+                    'fromIP': geo_nodes.features[edge.from].properties.ip,
+                    'toIP': geo_nodes.features[edge.to].properties.ip,
+                    'toType': geo_nodes.features[edge.to].properties.type,
+                    'fromType': geo_nodes.features[edge.from].properties.type
+                }
+            })
+        })
+        geo_edges = {
+            'type': 'FeatureCollection',
+            'features': geo_one_edge,
+        }
+
+    }
+
+
+    function getXY(x, y) {
+        let X = origin_point[0] + width_length[0] * x / 100;
+        let Y = origin_point[1] - width_length[1] * y / 100;
+        return [X, Y];
+    }
 </script>
 </body>
 

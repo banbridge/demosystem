@@ -108,18 +108,21 @@ public class NetCreateService {
         net.setNetValue(-netVal);
         net.setNodeList(nodes);
         net.setEdgeList(edges);
-        net.setClusters(cluster_map);
         logger.info("生成成功，规模为:" + n + " " + net.getNetValue());
         return net;
     }
 
     private int getClusterArea(int x, int y) {
         if (x < 50) {
-            if (y < 50) return 0;
+            if (y < 50) {
+                return 0;
+            }
             return 2;
         }
         if (x >= 50) {
-            if (y < 50) return 1;
+            if (y < 50) {
+                return 1;
+            }
             return 3;
         }
 

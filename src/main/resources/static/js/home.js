@@ -116,7 +116,7 @@ function updateNet(net, id_convas) {
     graph.read(new_data);
     //graph.changeData(new_data);
     // graph.changeData()
-    drawHulls();
+    //drawHulls();
 
 }
 
@@ -229,7 +229,7 @@ function drawNet(net, id_canvas) {
     });
 
     //graph.on('afterlayout', drawHulls());
-    graph.on('aftergraphrefresh', drawHulls());
+    // graph.on('aftergraphrefresh', drawHulls());
 
     graph.on('canvas:click', e => {
         clearStates();

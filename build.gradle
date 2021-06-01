@@ -9,10 +9,12 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
 repositories {
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    maven { url 'http://maven.aliyun.com/nexus/content/repositories/jcenter'}
-    maven { url 'https://maven.aliyun.com/repository/google/' }
-    maven { url 'https://maven.aliyun.com/repository/jcenter/'}
+    mavenLocal()
+    maven { url 'https://maven.aliyun.com/repository/jcenter' }
+    maven { url 'https://maven.aliyun.com/repository/public/' }
+    maven { url 'https://maven.aliyun.com/repository/google' }
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
     mavenCentral()
 }
 
@@ -37,14 +39,10 @@ dependencies {
     implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.3-1'
     // https://mvnrepository.com/artifact/org.webjars/sockjs-client
     implementation group: 'org.webjars', name: 'sockjs-client', version: '1.1.2'
-    // https://mvnrepository.com/artifact/org.webjars/echarts
-    implementation group: 'org.webjars', name: 'echarts', version: '5.0.1'
-
-
-
-
-
-
+    // https://mvnrepository.com/artifact/org.webjars.npm/echarts
+    implementation group: 'org.webjars.npm', name: 'echarts', version: '5.1.1'
+    // https://mvnrepository.com/artifact/org.webjars.npm/cesium
+    implementation group: 'org.webjars.npm', name: 'cesium', version: '1.81.0'
 
 
 }
