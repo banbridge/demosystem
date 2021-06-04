@@ -1,7 +1,7 @@
 package com.bupt.demosystem.aodv.module;
 
 import com.bupt.demosystem.aodv.message.AodvMessageType;
-import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;
 
@@ -93,7 +93,7 @@ public class RouterNode implements Runnable {
         exec.submit(new UdpSend(sendMessageQueue, dc));
         while (!Thread.interrupted()) {
             try {
-                Message msg = this.untreatedMessageQueue.take();
+                AodvMessage msg = this.untreatedMessageQueue.take();
                 dealMessage(msg);
             } catch (InterruptedException e) {
                 System.out.println("untreatedMessageQueue消息获取失败。。。。。");
@@ -116,7 +116,7 @@ public class RouterNode implements Runnable {
         }
     }
 
-    public void dealMessage(Message msg) throws InterruptedException {
+    public void dealMessage(AodvMessage msg) throws InterruptedException {
         /*
           处理消息
          */
@@ -129,7 +129,7 @@ public class RouterNode implements Runnable {
             sendMsg.setFromAddress(this.ipAddress);
             sendMsg.setToAddress(connectList.get(0).getIpAddress());
             System.out.println("放入发送队列:" + sendMsg.toString());
-            putSendMessage(new Message(AodvMessageType.CONTENT, sendMsg));
+            putSendMessage(new AodvMessage(AodvMessageType.CONTENT, sendMsg));
         }
 
     }
@@ -140,7 +140,7 @@ public class RouterNode implements Runnable {
      * @param msg
      * @throws InterruptedException
      */
-    public void putUntreatedMessage(Message msg) throws InterruptedException {
+    public void putUntreatedMessage(AodvMessage msg) throws InterruptedException {
         this.untreatedMessageQueue.put(msg);
     }
 
@@ -150,7 +150,7 @@ public class RouterNode implements Runnable {
      * @param msg
      * @throws InterruptedException
      */
-    public void putSendMessage(Message msg) throws InterruptedException {
+    public void putSendMessage(AodvMessage msg) throws InterruptedException {
         this.sendMessageQueue.put(msg);
     }
 

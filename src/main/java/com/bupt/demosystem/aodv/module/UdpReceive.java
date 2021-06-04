@@ -1,6 +1,6 @@
 package com.bupt.demosystem.aodv.module;
 
-import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;
 
@@ -66,7 +66,7 @@ public class UdpReceive implements Runnable {
                 InetSocketAddress address = (InetSocketAddress) datagramChannel.receive(byteBuffer);
                 byteBuffer.flip();
                 byteBuffer.get(msgBytes, 0, byteBuffer.remaining());
-                Message msg = (Message) Message.byteToObject(msgBytes);
+                AodvMessage msg = (AodvMessage) AodvMessage.byteToObject(msgBytes);
                 byteBuffer.clear();
                 untreatedMessageQueue.put(msg);
                 System.out.println(((MessageContent) msg.getObject()).getToAddress() + "收到消息:" + msg.toString());

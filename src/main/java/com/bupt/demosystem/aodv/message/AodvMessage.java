@@ -6,7 +6,7 @@ import java.io.*;
  * @author banbridge
  * 所有消息的父亲节点
  */
-public class Message implements Serializable {
+public class AodvMessage implements Serializable {
 
 
     /**
@@ -19,12 +19,12 @@ public class Message implements Serializable {
 
     private Object object;
 
-    public Message(AodvMessageType packetType, Object msg) {
+    public AodvMessage(AodvMessageType packetType, Object msg) {
         this.packetType = packetType;
         this.object = msg;
     }
 
-    public Message() {
+    public AodvMessage() {
 
     }
 

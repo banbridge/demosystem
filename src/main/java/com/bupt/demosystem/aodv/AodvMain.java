@@ -1,7 +1,7 @@
 package com.bupt.demosystem.aodv;
 
 import com.bupt.demosystem.aodv.message.AodvMessageType;
-import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.module.RouterNode;
 
@@ -29,7 +29,7 @@ public class AodvMain {
         InetSocketAddress toAddress = new InetSocketAddress(ip, port[1]);
         messageContent.setFromAddress(fromAddress);
         messageContent.setToAddress(toAddress);
-        Message msg = new Message(AodvMessageType.CONTENT, messageContent);
+        AodvMessage msg = new AodvMessage(AodvMessageType.CONTENT, messageContent);
         List<RouterNode> nodeList = new ArrayList<>();
         for (int i = 0; i < port.length; i++) {
             try {

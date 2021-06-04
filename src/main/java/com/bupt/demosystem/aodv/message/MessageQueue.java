@@ -8,5 +8,5 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @Date 2021/5/27 16:54
  */
 
-public class MessageQueue extends LinkedBlockingQueue<Message> {
+public class MessageQueue extends LinkedBlockingQueue<AodvMessage> {
 }

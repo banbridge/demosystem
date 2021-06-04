@@ -2,7 +2,7 @@ package com.bupt.demosystem.aodv.module;
 
 
 import com.bupt.demosystem.aodv.message.AodvMessageType;
-import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;
 
@@ -30,11 +30,11 @@ public class UdpSend implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                Message msg = sendMessageQueue.take();
+                AodvMessage msg = sendMessageQueue.take();
                 if (msg.getPacketType() == AodvMessageType.CONTENT) {
                     MessageContent msgContent = (MessageContent) msg.getObject();
                     System.out.println(msgContent.getFromAddress() + "发送消息：" + msg);
-                    datagramChannel.send(ByteBuffer.wrap(Message.objectToByte(msg)), msgContent.getToAddress());
+                    datagramChannel.send(ByteBuffer.wrap(AodvMessage.objectToByte(msg)), msgContent.getToAddress());
                 }
 
             } catch (InterruptedException e) {
