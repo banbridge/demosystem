@@ -1,7 +1,7 @@
 package com.bupt.demosystem.aodv.module;
 
-import person.gyb.aodv.message.Message;
-import person.gyb.aodv.message.MessageQueue;
+import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.MessageQueue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

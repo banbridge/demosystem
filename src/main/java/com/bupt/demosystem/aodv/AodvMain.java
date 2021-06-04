@@ -1,7 +1,7 @@
 package com.bupt.demosystem.aodv;
 
-import person.gyb.aodv.message.Message;
-import person.gyb.aodv.module.RouterNode;
+import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.module.RouterNode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -21,7 +21,7 @@ public class AodvMain {
         ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(10);
         Message ms = new Message();
         ms.setMessage("初始消息：" + UUID.randomUUID());
-        int port[] = {9999, 9998};
+        int[] port = {9999, 9998};
         String ip = "127.0.0.1";
         InetSocketAddress fromAddress = new InetSocketAddress(ip, port[0]);
         InetSocketAddress toAddress = new InetSocketAddress(ip, port[1]);

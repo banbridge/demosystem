@@ -1,7 +1,7 @@
 package com.bupt.demosystem.aodv.module;
 
-import person.gyb.aodv.message.Message;
-import person.gyb.aodv.message.MessageQueue;
+import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.MessageQueue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -124,7 +124,7 @@ public class RouterNode implements Runnable {
         Message sendMsg = new Message();
         sendMsg.setMessage("消息：" + UUID.randomUUID());
         sendMsg.setFromAddress(this.ipAddress);
-        //sendMsg.setToAddress(connectList.get(0).getIpAddress());
+        sendMsg.setToAddress(connectList.get(0).getIpAddress());
         System.out.println("放入发送队列:" + sendMsg.toString());
         putSendMessage(sendMsg);
     }
