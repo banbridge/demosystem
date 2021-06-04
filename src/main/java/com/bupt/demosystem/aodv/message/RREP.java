@@ -8,7 +8,7 @@ import java.net.InetSocketAddress;
  * 的节点的路由。通过RREP消息可以建立从收到RREP消息的节点到RREP消息中的
  * 目的节点的正向路由，用于以后发送数据到目的节点。
  */
-public class RREP extends MessageHead {
+public class RREP {
 
 
     /*

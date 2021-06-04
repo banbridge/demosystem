@@ -1,6 +1,7 @@
 package com.bupt.demosystem.aodv.module;
 
 import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;
 
 import java.io.IOException;
@@ -66,10 +67,9 @@ public class UdpReceive implements Runnable {
                 byteBuffer.flip();
                 byteBuffer.get(msgBytes, 0, byteBuffer.remaining());
                 Message msg = (Message) Message.byteToObject(msgBytes);
-                msg.setFromAddress(address);
                 byteBuffer.clear();
                 untreatedMessageQueue.put(msg);
-                System.out.println(msg.getToAddress() + "收到消息:" + msg.toString());
+                System.out.println(((MessageContent) msg.getObject()).getToAddress() + "收到消息:" + msg.toString());
             }
             iter.remove();
         }

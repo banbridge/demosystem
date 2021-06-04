@@ -1,6 +1,8 @@
 package com.bupt.demosystem.aodv.module;
 
+import com.bupt.demosystem.aodv.message.AodvMessageType;
 import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;
 
 import java.io.IOException;
@@ -121,12 +123,15 @@ public class RouterNode implements Runnable {
         System.out.println("处理消息:" + msg.toString());
         //休眠1s模拟处理消息
         TimeUnit.SECONDS.sleep(1);
-        Message sendMsg = new Message();
-        sendMsg.setMessage("消息：" + UUID.randomUUID());
-        sendMsg.setFromAddress(this.ipAddress);
-        sendMsg.setToAddress(connectList.get(0).getIpAddress());
-        System.out.println("放入发送队列:" + sendMsg.toString());
-        putSendMessage(sendMsg);
+        if (msg.getPacketType() == AodvMessageType.CONTENT) {
+            MessageContent sendMsg = (MessageContent) msg.getObject();
+            sendMsg.setMessage("消息：" + UUID.randomUUID());
+            sendMsg.setFromAddress(this.ipAddress);
+            sendMsg.setToAddress(connectList.get(0).getIpAddress());
+            System.out.println("放入发送队列:" + sendMsg.toString());
+            putSendMessage(new Message(AodvMessageType.CONTENT, sendMsg));
+        }
+
     }
 
     /**

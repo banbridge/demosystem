@@ -7,7 +7,7 @@ import java.net.InetSocketAddress;
  * 当链路发生故障导致一个或者多个目的节点不可达时，RERR消息就会被发送，
  * 设计RERR消息是为了能通知网络中其他节点哪些目的节点因为故障导致不可访问，
  */
-public class RERR extends MessageHead {
+public class RERR {
 
     /**
      * 本条RERR消息所通知的因为故障导致不可达的节点的数量，这个值必须大于等于1，

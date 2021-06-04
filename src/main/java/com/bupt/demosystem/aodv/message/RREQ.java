@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
  * RREP回复，则重发RREQ消息，直到达到最大发送次数。其他节点根据收到RREQ消息的接口建立从当前节点到
  * 源节点的反向路由。
  */
-public class RREQ extends MessageHead {
+public class RREQ {
 
 
     /**

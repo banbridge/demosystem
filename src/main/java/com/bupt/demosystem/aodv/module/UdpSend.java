@@ -1,7 +1,9 @@
 package com.bupt.demosystem.aodv.module;
 
 
+import com.bupt.demosystem.aodv.message.AodvMessageType;
 import com.bupt.demosystem.aodv.message.Message;
+import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;
 
 import java.io.IOException;
@@ -29,8 +31,12 @@ public class UdpSend implements Runnable {
         while (!Thread.interrupted()) {
             try {
                 Message msg = sendMessageQueue.take();
-                System.out.println(msg.getFromAddress() + "发送消息：" + msg);
-                datagramChannel.send(ByteBuffer.wrap(Message.objectToByte(msg)), msg.getToAddress());
+                if (msg.getPacketType() == AodvMessageType.CONTENT) {
+                    MessageContent msgContent = (MessageContent) msg.getObject();
+                    System.out.println(msgContent.getFromAddress() + "发送消息：" + msg);
+                    datagramChannel.send(ByteBuffer.wrap(Message.objectToByte(msg)), msgContent.getToAddress());
+                }
+
             } catch (InterruptedException e) {
                 System.out.println("获取待发送消息失败");
                 e.printStackTrace();

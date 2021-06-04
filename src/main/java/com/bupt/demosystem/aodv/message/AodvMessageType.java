@@ -25,6 +25,11 @@ public enum AodvMessageType {
     /**
      * Route Reply Acknowledgment (RREP-ACK) Message
      */
-    RREP_ACK
+    RREP_ACK,
+
+    /**
+     * 发送具体的消息
+     */
+    CONTENT
 
 }

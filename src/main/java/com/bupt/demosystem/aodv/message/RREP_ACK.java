@@ -9,7 +9,7 @@ package com.bupt.demosystem.aodv.message;
  * RREP-ACK意义在于告知发送RREP的节点目的节点已经
  * 收到RREP消息，并且暗示了链路是双向传播和可靠的。
  */
-public class RREP_ACK extends MessageHead {
+public class RREP_ACK {
 
 
 }
