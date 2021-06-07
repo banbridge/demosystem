@@ -1,13 +1,14 @@
 package com.bupt.demosystem.aodv;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * @Author banbridge
  * @Classname RouterTable
  * @Date 2021/6/2 16:42
  */
-public class RouterTable {
+public class RouteTableItem {
 
     /**
      * 目标ip地址,可以讲InetSocketAddress转化为String类型
@@ -53,6 +54,54 @@ public class RouterTable {
     /**
      * 上游节点列表， 用于建立反向路由，当下游链路出现问题时可以通知上游节点
      */
-    //private List<Object> precursors;
+    private List<Object> precursors;
 
+
+    public InetSocketAddress getDestIpAddress() {
+        return destIpAddress;
+    }
+
+    public void setDestIpAddress(InetSocketAddress destIpAddress) {
+        this.destIpAddress = destIpAddress;
+    }
+
+    public int getDestSequenceNumber() {
+        return destSequenceNumber;
+    }
+
+    public void setDestSequenceNumber(int destSequenceNumber) {
+        this.destSequenceNumber = destSequenceNumber;
+    }
+
+    public int getHopCount() {
+        return hopCount;
+    }
+
+    public void setHopCount(int hopCount) {
+        this.hopCount = hopCount;
+    }
+
+    public InetSocketAddress getNextHop() {
+        return nextHop;
+    }
+
+    public void setNextHop(InetSocketAddress nextHop) {
+        this.nextHop = nextHop;
+    }
+
+    public boolean isValidDestSequenceNumberFlag() {
+        return validDestSequenceNumberFlag;
+    }
+
+    public void setValidDestSequenceNumberFlag(boolean validDestSequenceNumberFlag) {
+        this.validDestSequenceNumberFlag = validDestSequenceNumberFlag;
+    }
+
+    public int getOtherFlag() {
+        return otherFlag;
+    }
+
+    public void setOtherFlag(int otherFlag) {
+        this.otherFlag = otherFlag;
+    }
 }

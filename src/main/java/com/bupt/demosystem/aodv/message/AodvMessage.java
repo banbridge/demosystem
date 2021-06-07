@@ -1,6 +1,8 @@
 package com.bupt.demosystem.aodv.message;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 /**
  * @author banbridge
@@ -10,12 +12,25 @@ public class AodvMessage implements Serializable {
 
 
     /**
+     * 每个消息的唯一标识符
+     */
+    private Long id;
+
+    /**
      * 1.RREQ节点向其邻居节点广播RREQ报文用于路由发现，（Hello报文相当于TTL为1的RREP报文）
      * 2.RREP当找到目的节点或某中间节点路由表含有到目的节点的路由记录时，节点向源节点发送RREP报文
      * 3.RERR邻居节点间周期性的互相广播“Hello”报文，用来保持联系，若在一段时间内没有收到“Hello”报文，
      * 则认为链路断开，然后节点产生RERR（路由错误报文）报文向源节点报告情况
      */
     private AodvMessageType packetType;
+
+
+    /**
+     * 上一跳和下一跳地址
+     */
+    private InetSocketAddress lastHopAddress;
+    private InetSocketAddress nextHopAddress;
+
 
     private Object object;
 
@@ -26,6 +41,22 @@ public class AodvMessage implements Serializable {
 
     public AodvMessage() {
 
+    }
+
+    public InetSocketAddress getLastHopAddress() {
+        return lastHopAddress;
+    }
+
+    public void setLastHopAddress(InetSocketAddress lastHopAddress) {
+        this.lastHopAddress = lastHopAddress;
+    }
+
+    public InetSocketAddress getNextHopAddress() {
+        return nextHopAddress;
+    }
+
+    public void setNextHopAddress(InetSocketAddress nextHopAddress) {
+        this.nextHopAddress = nextHopAddress;
     }
 
     public Object getObject() {
@@ -44,6 +75,11 @@ public class AodvMessage implements Serializable {
         this.packetType = packetType;
     }
 
+    /**
+     * 字节流和对象互相转化
+     *
+     * @param bytes bytes为要转化的字节流
+     */
     public static Object byteToObject(byte[] bytes) {
         Object obj = null;
         try {

@@ -11,11 +11,13 @@ import java.net.InetSocketAddress;
  */
 public class MessageContent implements Serializable {
 
+    /**
+     * 源ip地址和目的ip地址
+     */
     private InetSocketAddress fromAddress;
     private InetSocketAddress toAddress;
 
     private String message;
-
 
     public InetSocketAddress getFromAddress() {
         return fromAddress;

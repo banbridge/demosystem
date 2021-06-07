@@ -3,7 +3,7 @@ package com.bupt.demosystem.aodv;
 import com.bupt.demosystem.aodv.message.AodvMessageType;
 import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
-import com.bupt.demosystem.aodv.module.RouterNode;
+import com.bupt.demosystem.aodv.module.RouteNode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -30,21 +30,21 @@ public class AodvMain {
         messageContent.setFromAddress(fromAddress);
         messageContent.setToAddress(toAddress);
         AodvMessage msg = new AodvMessage(AodvMessageType.CONTENT, messageContent);
-        List<RouterNode> nodeList = new ArrayList<>();
+        List<RouteNode> nodeList = new ArrayList<>();
         for (int i = 0; i < port.length; i++) {
             try {
-                RouterNode rn = new RouterNode(i, ip, port[i], exec);
+                RouteNode rn = new RouteNode(i, ip, port[i], exec);
                 nodeList.add(rn);
             } catch (IOException e) {
                 System.out.println("创建节点" + i + "失败！！！！！");
                 e.printStackTrace();
             }
         }
-        RouterNode node1 = nodeList.get(0);
+        RouteNode node1 = nodeList.get(0);
         node1.putUntreatedMessage(msg);
         nodeList.get(0).addConnectNode(nodeList.get(1));
         nodeList.get(1).addConnectNode(nodeList.get(0));
-        for (RouterNode node : nodeList) {
+        for (RouteNode node : nodeList) {
             exec.submit(node);
         }
     }
