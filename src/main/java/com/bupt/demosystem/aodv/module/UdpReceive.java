@@ -22,7 +22,7 @@ public class UdpReceive implements Runnable {
     /**
      * 将接收的消息放入里边
      */
-    private final MessageQueue untreatedMessageQueue;
+    private final MessageQueue recvMessageQueue;
 
     /**
      * 节点传来的选择器
@@ -32,8 +32,8 @@ public class UdpReceive implements Runnable {
     private final int BUFFER_CAPACITY = 1024 * 3;
 
 
-    public UdpReceive(MessageQueue untreatedMessageQueue, Selector selector) {
-        this.untreatedMessageQueue = untreatedMessageQueue;
+    public UdpReceive(MessageQueue recvMessageQueue, Selector selector) {
+        this.recvMessageQueue = recvMessageQueue;
         this.selector = selector;
     }
 
@@ -68,7 +68,7 @@ public class UdpReceive implements Runnable {
                 byteBuffer.get(msgBytes, 0, byteBuffer.remaining());
                 AodvMessage msg = (AodvMessage) AodvMessage.byteToObject(msgBytes);
                 byteBuffer.clear();
-                untreatedMessageQueue.put(msg);
+                recvMessageQueue.put(msg);
                 System.out.println(((MessageContent) msg.getObject()).getToAddress() + "收到消息:" + msg.toString());
             }
             iter.remove();

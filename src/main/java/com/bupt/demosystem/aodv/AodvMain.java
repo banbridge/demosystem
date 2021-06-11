@@ -1,6 +1,6 @@
 package com.bupt.demosystem.aodv;
 
-import com.bupt.demosystem.aodv.message.AodvMessageType;
+import com.bupt.demosystem.aodv.message.tool.AodvMessageType;
 import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.module.RouteNode;
@@ -41,7 +41,7 @@ public class AodvMain {
             }
         }
         RouteNode node1 = nodeList.get(0);
-        node1.putUntreatedMessage(msg);
+        node1.putRecvMessage(msg);
         nodeList.get(0).addConnectNode(nodeList.get(1));
         nodeList.get(1).addConnectNode(nodeList.get(0));
         for (RouteNode node : nodeList) {

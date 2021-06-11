@@ -1,7 +1,7 @@
 package com.bupt.demosystem.aodv.module;
 
 
-import com.bupt.demosystem.aodv.message.AodvMessageType;
+import com.bupt.demosystem.aodv.message.tool.AodvMessageType;
 import com.bupt.demosystem.aodv.message.AodvMessage;
 import com.bupt.demosystem.aodv.message.MessageContent;
 import com.bupt.demosystem.aodv.message.MessageQueue;

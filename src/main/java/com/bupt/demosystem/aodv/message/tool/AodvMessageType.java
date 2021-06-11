@@ -1,4 +1,4 @@
-package com.bupt.demosystem.aodv.message;
+package com.bupt.demosystem.aodv.message.tool;
 
 /**
  * @Author banbridge

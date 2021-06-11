@@ -1,6 +1,7 @@
 package com.bupt.demosystem.aodv.message;
 
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 /**
  * @author banbridge
@@ -54,4 +55,67 @@ public class RREQ {
      */
     private int origSequenceNumber;
 
+    public boolean isFlagD() {
+        return flagD;
+    }
+
+    public void setFlagD(boolean flagD) {
+        this.flagD = flagD;
+    }
+
+    public boolean isFlagU() {
+        return flagU;
+    }
+
+    public void setFlagU(boolean flagU) {
+        this.flagU = flagU;
+    }
+
+    public int getHopCount() {
+        return hopCount;
+    }
+
+    public void setHopCount(int hopCount) {
+        this.hopCount = hopCount;
+    }
+
+    public int getRreqId() {
+        return rreqId;
+    }
+
+    public void setRreqId(int rreqId) {
+        this.rreqId = rreqId;
+    }
+
+    public InetSocketAddress getDestIpAddress() {
+        return destIpAddress;
+    }
+
+    public void setDestIpAddress(InetSocketAddress destIpAddress) {
+        this.destIpAddress = destIpAddress;
+    }
+
+    public int getDestSequenceNumber() {
+        return destSequenceNumber;
+    }
+
+    public void setDestSequenceNumber(int destSequenceNumber) {
+        this.destSequenceNumber = destSequenceNumber;
+    }
+
+    public InetSocketAddress getOrigIpAddress() {
+        return origIpAddress;
+    }
+
+    public void setOrigIpAddress(InetSocketAddress origIpAddress) {
+        this.origIpAddress = origIpAddress;
+    }
+
+    public int getOrigSequenceNumber() {
+        return origSequenceNumber;
+    }
+
+    public void setOrigSequenceNumber(int origSequenceNumber) {
+        this.origSequenceNumber = origSequenceNumber;
+    }
 }

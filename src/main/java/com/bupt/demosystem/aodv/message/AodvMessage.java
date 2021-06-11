@@ -1,20 +1,16 @@
 package com.bupt.demosystem.aodv.message;
 
+import com.bupt.demosystem.aodv.message.tool.AodvMessageType;
+
 import java.io.*;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.time.LocalTime;
 
 /**
  * @author banbridge
  * 所有消息的父亲节点
  */
 public class AodvMessage implements Serializable {
-
-
-    /**
-     * 每个消息的唯一标识符
-     */
-    private Long id;
 
     /**
      * 1.RREQ节点向其邻居节点广播RREQ报文用于路由发现，（Hello报文相当于TTL为1的RREP报文）
@@ -24,8 +20,18 @@ public class AodvMessage implements Serializable {
      */
     private AodvMessageType packetType;
 
+    /**
+     * 模拟ip数据包中的TTL
+     */
+    private int TTL;
 
     /**
+     * 每个消息的产生的时间戳
+     */
+    private LocalTime createTime;
+
+    /**
+     * 模拟ip协议
      * 上一跳和下一跳地址
      */
     private InetSocketAddress lastHopAddress;
@@ -73,6 +79,18 @@ public class AodvMessage implements Serializable {
 
     public void setPacketType(AodvMessageType packetType) {
         this.packetType = packetType;
+    }
+
+    public void subTTL() {
+        this.TTL--;
+    }
+
+    public LocalTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalTime createTime) {
+        this.createTime = createTime;
     }
 
     /**
