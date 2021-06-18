@@ -6,15 +6,14 @@ import com.bupt.demosystem.aodv.message.tool.AodvMessageType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.time.LocalTime;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Author banbridge
@@ -29,6 +28,11 @@ public class RouteNode implements Runnable {
      * 每个节点的唯一id标识符
      */
     private final int nodeId;
+
+    /**
+     * 线程运行标志
+     */
+    private boolean flag_run;
 
     /**
      * udp接收到消息后会放到，待处理的message队列，等待其他线程处理
@@ -66,7 +70,7 @@ public class RouteNode implements Runnable {
     /**
      * 路由表条目
      */
-    private HashMap<InetSocketAddress, RoutingTableEntry> routeTable;
+    private RoutingTable m_routingTable;
 
     /**
      * 所有节点能够收到广播消息的节点
@@ -81,22 +85,144 @@ public class RouteNode implements Runnable {
     /**
      * 节点的序列号
      */
-    private int sequenceNumber;
+    private int m_seqNo;
 
     /**
      * 节点维护的rreq_id
      */
-    private int rreq_id;
+    private int m_requestId;
 
     /**
      * rreq Id的过期时间
+     * Handle duplicated RREQ
      */
-    private IdCache m_idCache;
+    private final IdCache m_idCache;
+
+    /**
+     * Handle neighbors
+     */
+    private RoutingNeighbor m_nb;
+
+    /**
+     * Number of RREQs used for RREQ rate control
+     */
+    private int m_rreqCount;
+
+    /**
+     * Number of RERRs used for RERR rate control
+     */
+    private int m_rrerCount;
+
+    /**
+     * Protocol parameters.
+     */
+
+    /**
+     * Maximum number of retransmissions of RREQ with TTL = NetDiameter to discover a route
+     */
+    private int m_rreqRetries;
+    /**
+     * Initial TTL value for RREQ.
+     */
+    private int m_ttlStart;
+    /**
+     * TTL increment for each attempt using the expanding ring search for RREQ dissemination.
+     */
+    private int m_ttlIncrement;
+    /**
+     * Maximum TTL value for expanding ring search, TTL = NetDiameter is used beyond this value.
+     */
+    private int m_ttlThreshold;
+    /**
+     * Provide a buffer for the timeout.
+     */
+    private int m_timeoutBuffer;
+    /**
+     * Maximum number of RREQ per second.
+     */
+    private int m_rreqRateLimit;
+    /**
+     * Maximum number of REER per second.
+     */
+    private int m_rerrRateLimit;
+    /**
+     * Period of time during which the route is considered to be valid.
+     */
+    private LocalTime m_activeRouteTimeout;
+    /**
+     * Net diameter measures the maximum possible number of hops between two nodes in the network
+     */
+    private int m_netDiameter;
+
+    /**
+     * NodeTraversalTime is a conservative estimate of the average one hop traversal time for packets
+     * and should include queuing delays, interrupt processing times and transfer times.
+     */
+    private LocalTime m_nodeTraversalTime;
+    /*8
+    Estimate of the average net traversal time.
+     */
+    private LocalTime m_netTraversalTime;
+    /**
+     * Estimate of maximum time needed to find route in network.
+     */
+    private LocalTime m_pathDiscoveryTime;
+    /**
+     * Value of lifetime field in RREP generating by this node.
+     */
+    private LocalTime m_myRouteTimeout;
+    /**
+     * Every HelloInterval the node checks whether it has sent a broadcast  within the last HelloInterval.
+     * If it has not, it MAY broadcast a  Hello message
+     */
+    private LocalTime m_helloInterval;
+    /**
+     * Number of hello messages which may be loss for valid link
+     */
+    private int m_allowedHelloLoss;
+    /**
+     * DeletePeriod is intended to provide an upper bound on the time for which an upstream node A
+     * can have a neighbor B as an active next hop for destination D, while B has invalidated the route to D.
+     */
+    private LocalTime m_deletePeriod;
+    /**
+     * Period of our waiting for the neighbour's RREP_ACK
+     */
+    private LocalTime m_nextHopWait;
+    /**
+     * Time for which the node is put into the blacklist
+     */
+    private LocalTime m_blackListTimeout;
+    /**
+     * The maximum number of packets that we allow a routing protocol to buffer.
+     */
+    private int m_maxQueueLen;
+    /**
+     * The maximum period of time that a routing protocol is allowed to buffer a packet for.
+     */
+    private LocalTime m_maxQueueTime;
+    /**
+     * Indicates only the destination may respond to this RREQ.
+     */
+    private boolean m_destinationOnly;
+    /**
+     * Indicates whether a gratuitous RREP should be unicast to the node originated route discovery.
+     */
+    private boolean m_gratuitousReply;
+    /**
+     * Indicates whether a hello messages enable
+     */
+    private boolean m_enableHello;
+    /**
+     * Indicates whether a a broadcast data packets forwarding enable
+     */
+    private boolean m_enableBroadcast;
 
 
     public RouteNode(int id, String ip, int port, ScheduledThreadPoolExecutor exec) throws IOException {
         //设置节点id
         this.nodeId = id;
+        this.flag_run = true;
         //根据ip和断喽设置标识符
         this.ipAddress = new InetSocketAddress(ip, port);
         //NIO UDP准备工作
@@ -112,9 +238,23 @@ public class RouteNode implements Runnable {
         //线程池
         this.exec = exec;
         //初始化路由表
-        routeTable = new HashMap<>();
-        this.sequenceNumber = 1;
+        this.m_routingTable = new RoutingTable(10);
+        this.m_seqNo = 1;
         this.m_idCache = new IdCache(5000);
+
+        this.m_rreqRetries = 2;
+        this.m_ttlStart = 1;
+        this.m_ttlIncrement = 2;
+        this.m_ttlThreshold = 7;
+        this.m_timeoutBuffer = 2;
+        this.m_rreqRateLimit = 10;
+        this.m_rerrRateLimit = 10;
+        //3s
+        //this.m_activeRouteTimeout = 3;
+        this.m_netDiameter = 35;
+        //40ms
+        //this.m_nodeTraversalTime = 40;
+
     }
 
     /**
@@ -125,8 +265,6 @@ public class RouteNode implements Runnable {
         System.out.println("节点" + this.ipAddress + "启动");
         //该线程主要用来接收消息放入待处理消息队列
         exec.submit(new UdpReceive(recvMessageQueue, selector));
-        //该线程将待发送消息队列的消息发送出去
-        exec.submit(new UdpSend(sendMessageQueue, dc));
         //定时任务线程启动
         AodvScheduleTask aodvScheduleTask = new AodvScheduleTask();
         exec.execute(aodvScheduleTask);
@@ -161,7 +299,7 @@ public class RouteNode implements Runnable {
          */
         System.out.println("处理消息:" + msg.toString());
         //休眠1s模拟处理消息
-        TimeUnit.SECONDS.sleep(1);
+        //TimeUnit.SECONDS.sleep(1);
         switch (msg.getPacketType()) {
             case RREQ:
                 recvRequest(msg);
@@ -225,13 +363,13 @@ public class RouteNode implements Runnable {
     private void receiveContent(AodvMessage msg) throws InterruptedException {
 
         MessageContent recvMsg = (MessageContent) msg.getObject();
+        RoutingTableEntry item = new RoutingTableEntry();
         //查看消息的目的地地址是不是自己
         if (recvMsg.getToAddress().equals(this.ipAddress)) {
             //消息到达目的地址，此次消息交付上层应用处理
             System.out.println("消息到达目的节点，交付上层应用。");
-        } else if (routeTable.containsKey(recvMsg.getToAddress())) {
+        } else if (m_routingTable.lookupRoute(recvMsg.getToAddress(), item)) {
             //生成待发送的消息
-            RoutingTableEntry item = routeTable.get(recvMsg.getToAddress());
             msg.setLastHopAddress(ipAddress);
             msg.setNextHopAddress(item.getNextHop());
             putSendMessage(msg);
@@ -255,10 +393,10 @@ public class RouteNode implements Runnable {
         for (RouteNode node : neighborList) {
             RREQ rreq = new RREQ();
             AodvMessage aodvMessage = new AodvMessage();
-            rreq.setRreqId(this.rreq_id);
+            rreq.setRreqId(this.m_requestId);
             rreq.setDestIpAddress(toAddress);
             rreq.setOrigIpAddress(this.ipAddress);
-            rreq.setOrigSequenceNumber(this.sequenceNumber);
+            rreq.setOrigSequenceNumber(this.m_seqNo);
             rreq.setFlagU(true);
             rreq.setRreqId(0);
             aodvMessage.setCreateTime(LocalTime.now());
@@ -271,6 +409,27 @@ public class RouteNode implements Runnable {
 
     }
 
+    public void sendUdpMessage(AodvMessage message, InetSocketAddress dst) {
+        try {
+            this.dc.send(ByteBuffer.wrap(AodvMessage.objectToByte(message)), dst);
+        } catch (IOException e) {
+            System.out.println("发送失败");
+            e.printStackTrace();
+        }
+
+    }
+
+    public void sendUdpMessage(AodvMessage message) {
+        try {
+            MessageContent msgContent = (MessageContent) message.getObject();
+            System.out.println(msgContent.getFromAddress() + "发送消息：" + message);
+            this.dc.send(ByteBuffer.wrap(AodvMessage.objectToByte(message)), message.getNextHopAddress());
+        } catch (IOException e) {
+            System.out.println("发送失败");
+            e.printStackTrace();
+        }
+
+    }
 
     /**
      * 将接收到的消息放入待处理队列
@@ -324,17 +483,14 @@ public class RouteNode implements Runnable {
         return nodeId;
     }
 
-    public HashMap<InetSocketAddress, RoutingTableEntry> getRouteTable() {
-        return routeTable;
-    }
 
     /**
      * 自增序列号
      */
     public void autoIncrementSequenceNumber() {
-        this.sequenceNumber++;
-        if (this.sequenceNumber == Integer.MAX_VALUE) {
-            this.sequenceNumber = 1;
+        this.m_seqNo++;
+        if (this.m_seqNo == Integer.MAX_VALUE) {
+            this.m_seqNo = 1;
         }
     }
 
@@ -342,7 +498,7 @@ public class RouteNode implements Runnable {
      * 自增节点维护的rreq的id
      */
     public void autoIncrementRREQId() {
-        this.rreq_id++;
+        this.m_requestId++;
     }
 
     /**
@@ -352,5 +508,9 @@ public class RouteNode implements Runnable {
      */
     public void addConnectNode(RouteNode rn) {
         this.connectList.add(rn);
+    }
+
+    public void stopRouteNode() {
+        this.flag_run = false;
     }
 }

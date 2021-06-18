@@ -20,13 +20,14 @@ public class NetCreateService {
 
 
     private final int SIZE_OF_CLUSTER = 4;
-    private final int MAX_COST = 30;
+    private final int MAX_COST = 60;
     private final int SIZE_OF_TYPE = 3;
 
     private final Logger logger = LoggerFactory.getLogger(NetCreateService.class);
 
-    /*
+    /**
      * 随机生成节点，利用DRTD算法生成拓扑网络
+     *
      * */
     public Network getNetwork() {
         int n = 20;
@@ -89,7 +90,7 @@ public class NetCreateService {
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
                 if (map[i][j] == 1) {
-                    edges.add(new Edge(edge_count, i, j));
+                    edges.add(new Edge(edge_count++, i, j));
                 }
             }
         }

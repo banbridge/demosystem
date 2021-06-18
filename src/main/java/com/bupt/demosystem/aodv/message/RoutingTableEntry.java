@@ -1,14 +1,12 @@
 package com.bupt.demosystem.aodv.message;
 
+
 import com.bupt.demosystem.aodv.message.tool.RouterFlags;
 
 import java.net.InetSocketAddress;
 import java.time.LocalTime;
-import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @Author banbridge

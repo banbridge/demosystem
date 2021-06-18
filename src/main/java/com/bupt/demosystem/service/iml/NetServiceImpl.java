@@ -104,12 +104,9 @@ public class NetServiceImpl implements NetService {
     public List<Network> getPageNetwork(Integer pageNum, Integer pageSize) {
         Page<NetMemory> netMemoryPage = netRepository.findAll(PageRequest.of(pageNum - 1, pageSize));
         ArrayList<Network> networks = new ArrayList<Network>();
-        // System.out.println(pageNum+"------"+netMemoryPage.getContent().size());
         for (NetMemory netMemory : netMemoryPage.getContent()) {
             try {
                 Network temp = stringToNetwork(netMemory.getNet());
-                System.out.println("====" + netMemory.getNet());
-                System.out.println("====" + temp.getNetValue());
                 temp.setId(netMemory.getId());
                 temp.setNetValue(netMemory.getNetvalue());
                 temp.setModifiedTime(netMemory.getModifiedTime());

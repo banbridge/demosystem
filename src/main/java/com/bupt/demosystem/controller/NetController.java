@@ -47,7 +47,7 @@ public class NetController {
     @RequestMapping("/")
     public ModelAndView homePage() {
         ModelAndView mv = new ModelAndView();
-        mv.setViewName("vue-home");
+        mv.setViewName("home");
         logger.info("homePage");
         return mv;
     }

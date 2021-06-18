@@ -148,18 +148,22 @@ function drawNet(net, id_canvas) {
         },
         plugins: [tooltip],
         defaultNode: {
-            size: 40,
+            size: 15,
             style: {
                 stroke: '#686f77',
                 lineWidth: 1,
             },
-
+            labelCfg: {
+                style: {
+                    fontSize: 10,
+                },
+            },
         },
         defaultEdge: {
             type: 'line',
             style: {
-                lineWidth: 1,
-                stroke: "rgba(6,12,19,0.34)",
+                lineWidth: 0.5,
+                stroke: "rgba(35,74,109,0.18)",
             },
         },
 
@@ -181,11 +185,11 @@ function drawNet(net, id_canvas) {
         edgeStateStyles: {
             click: {
                 stroke: 'steelblue',
-                lineWidth: 4
+                lineWidth: 1
             },
             highlight: {
                 stroke: '#e24759',
-                lineWidth: 3
+                lineWidth: 1
             },
             inactive: {
                 stroke: 'rgba(103,103,98,0.1)',
@@ -228,7 +232,7 @@ function drawNet(net, id_canvas) {
         graph.setItemState(edgeItem, 'click', true); // 设置当前边的 click 状态为 true
     });
 
-    //graph.on('afterlayout', drawHulls());
+    // graph.on('afterlayout', drawHulls());
     // graph.on('aftergraphrefresh', drawHulls());
 
     graph.on('canvas:click', e => {

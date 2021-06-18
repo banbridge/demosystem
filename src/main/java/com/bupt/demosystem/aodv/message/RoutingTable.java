@@ -4,8 +4,10 @@ import com.bupt.demosystem.aodv.message.tool.RouterFlags;
 
 import java.net.InetSocketAddress;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -67,11 +69,12 @@ public class RoutingTable {
             System.out.println("路由表为空");
             return false;
         }
-        rt = ipAddressEntry.get(dst);
-        if (rt != null) {
+        RoutingTableEntry rt_1 = ipAddressEntry.get(dst);
+        if (rt_1 == null) {
             System.out.println("Route to " + dst + " not found!!");
             return false;
         }
+
         return true;
     }
 
@@ -220,3 +223,4 @@ public class RoutingTable {
         this.m_badLinkLifetime = m_badLinkLifetime;
     }
 }
+

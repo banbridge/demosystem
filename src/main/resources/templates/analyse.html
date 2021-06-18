@@ -35,7 +35,9 @@
 <script th:src="@{js/g6.min.js}"></script>
 <script type="text/javascript" th:src="@{webjars/stomp-websocket/stomp.min.js}"></script>
 <script type="text/javascript" th:src="@{webjars/sockjs-client/sockjs.min.js}"></script>
-<script type="text/javascript" th:src="@{webjars/echarts/echarts.min.js}"></script>
+<script type="text/javascript" src="webjars/echarts/5.1.1/dist/echarts.min.js"
+        th:src="@{webjars/echarts/dist/echarts.min.js}"></script>
+
 <script type="text/javascript" th:inline="javascript">
     initAnalyse();
     $(document).ready(function () {

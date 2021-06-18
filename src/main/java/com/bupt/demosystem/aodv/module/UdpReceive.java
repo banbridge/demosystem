@@ -24,6 +24,7 @@ public class UdpReceive implements Runnable {
      */
     private final MessageQueue recvMessageQueue;
 
+    private boolean flag_run;
     /**
      * 节点传来的选择器
      */
@@ -35,11 +36,12 @@ public class UdpReceive implements Runnable {
     public UdpReceive(MessageQueue recvMessageQueue, Selector selector) {
         this.recvMessageQueue = recvMessageQueue;
         this.selector = selector;
+        this.flag_run = true;
     }
 
     @Override
     public void run() {
-        while (!Thread.interrupted()) {
+        while (flag_run) {
             try {
                 if (selector.select(1) == 0) {
                     continue;
@@ -74,5 +76,9 @@ public class UdpReceive implements Runnable {
             iter.remove();
         }
 
+    }
+
+    public void stopUdpReceive() {
+        this.flag_run = false;
     }
 }

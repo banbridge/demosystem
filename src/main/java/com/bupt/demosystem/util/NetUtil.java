@@ -75,7 +75,7 @@ public class NetUtil {
 
         }
         for (int i = 0; i < n; i++) {
-            ans.add(ans_val[i]);
+            ans.add(-ans_val[i] * (Math.log(ans_val[i])));
         }
         return ans;
     }

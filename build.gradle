@@ -39,8 +39,8 @@ dependencies {
     implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.3-1'
     // https://mvnrepository.com/artifact/org.webjars/sockjs-client
     implementation group: 'org.webjars', name: 'sockjs-client', version: '1.1.2'
-    // https://mvnrepository.com/artifact/org.webjars.npm/echarts
-    implementation group: 'org.webjars.npm', name: 'echarts', version: '5.1.1'
+    // https://mvnrepository.com/artifact/org.webjars.bower/echarts
+    implementation group: 'org.webjars.bower', name: 'echarts', version: '5.1.1'
     // https://mvnrepository.com/artifact/org.webjars.npm/cesium
     implementation group: 'org.webjars.npm', name: 'cesium', version: '1.81.0'
 
