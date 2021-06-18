@@ -63,19 +63,14 @@ public class RoutingTable {
      * \param rt entry with destination address dst, if exists
      * \return true on success
      */
-    public boolean lookupRoute(InetSocketAddress dst, RoutingTableEntry rt) {
+    public RoutingTableEntry lookupRoute(InetSocketAddress dst) {
         purge();
         if (ipAddressEntry.isEmpty()) {
             System.out.println("路由表为空");
-            return false;
+            return null;
         }
         RoutingTableEntry rt_1 = ipAddressEntry.get(dst);
-        if (rt_1 == null) {
-            System.out.println("Route to " + dst + " not found!!");
-            return false;
-        }
-
-        return true;
+        return rt_1;
     }
 
     /**
@@ -84,8 +79,9 @@ public class RoutingTable {
      * \param rt entry with destination address dst, if exists
      * \return true on success
      */
-    public boolean lookupValidRoute(InetSocketAddress dst, RoutingTableEntry rt) {
-        if (!lookupRoute(dst, rt)) {
+    public boolean lookupValidRoute(InetSocketAddress dst) {
+        RoutingTableEntry rt = lookupRoute(dst);
+        if (rt == null) {
             return false;
         }
         return rt.getFlag() == RouterFlags.VALID;
