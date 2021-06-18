@@ -15,13 +15,13 @@ public class RoutingNeighbor {
     /**
      * 节点的id
      */
-    private int nodeId;
+    private int delay;
 
     private HashMap<InetSocketAddress, Neighbor> neighbors;
 
 
-    public RoutingNeighbor(int nodeId) {
-        this.nodeId = nodeId;
+    public RoutingNeighbor(int delay) {
+        this.delay = delay;
         neighbors = new HashMap<>();
     }
 
@@ -88,14 +88,6 @@ public class RoutingNeighbor {
         neighbors.clear();
     }
 
-
-    public int getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(int nodeId) {
-        this.nodeId = nodeId;
-    }
 
 }
 

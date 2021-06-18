@@ -24,6 +24,7 @@ public class IdCache {
 
     public IdCache(int lifeTime) {
         this.lifeTime = lifeTime;
+        m_idCache = new LinkedList<>();
     }
 
     private void purge() {

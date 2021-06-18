@@ -40,11 +40,6 @@ public class RouteNode implements Runnable {
     private final MessageQueue recvMessageQueue;
 
     /**
-     * 会将待发送的消息放入该队列，等待去发送
-     */
-    private final MessageQueue sendMessageQueue;
-
-    /**
      * 节点的经纬度和高度
      */
     private int longitude;
@@ -96,7 +91,7 @@ public class RouteNode implements Runnable {
      * rreq Id的过期时间
      * Handle duplicated RREQ
      */
-    private final IdCache m_idCache;
+    private IdCache m_rreqIdCache;
 
     /**
      * Handle neighbors
@@ -111,7 +106,7 @@ public class RouteNode implements Runnable {
     /**
      * Number of RERRs used for RERR rate control
      */
-    private int m_rrerCount;
+    private int m_rerrCount;
 
     /**
      * Protocol parameters.
@@ -148,7 +143,7 @@ public class RouteNode implements Runnable {
     /**
      * Period of time during which the route is considered to be valid.
      */
-    private LocalTime m_activeRouteTimeout;
+    private int m_activeRouteTimeout;
     /**
      * Net diameter measures the maximum possible number of hops between two nodes in the network
      */
@@ -158,24 +153,24 @@ public class RouteNode implements Runnable {
      * NodeTraversalTime is a conservative estimate of the average one hop traversal time for packets
      * and should include queuing delays, interrupt processing times and transfer times.
      */
-    private LocalTime m_nodeTraversalTime;
+    private int m_nodeTraversalTime;
     /*8
     Estimate of the average net traversal time.
      */
-    private LocalTime m_netTraversalTime;
+    private int m_netTraversalTime;
     /**
      * Estimate of maximum time needed to find route in network.
      */
-    private LocalTime m_pathDiscoveryTime;
+    private int m_pathDiscoveryTime;
     /**
      * Value of lifetime field in RREP generating by this node.
      */
-    private LocalTime m_myRouteTimeout;
+    private int m_myRouteTimeout;
     /**
      * Every HelloInterval the node checks whether it has sent a broadcast  within the last HelloInterval.
      * If it has not, it MAY broadcast a  Hello message
      */
-    private LocalTime m_helloInterval;
+    private int m_helloInterval;
     /**
      * Number of hello messages which may be loss for valid link
      */
@@ -184,15 +179,15 @@ public class RouteNode implements Runnable {
      * DeletePeriod is intended to provide an upper bound on the time for which an upstream node A
      * can have a neighbor B as an active next hop for destination D, while B has invalidated the route to D.
      */
-    private LocalTime m_deletePeriod;
+    private int m_deletePeriod;
     /**
      * Period of our waiting for the neighbour's RREP_ACK
      */
-    private LocalTime m_nextHopWait;
+    private int m_nextHopWait;
     /**
      * Time for which the node is put into the blacklist
      */
-    private LocalTime m_blackListTimeout;
+    private int m_blackListTimeout;
     /**
      * The maximum number of packets that we allow a routing protocol to buffer.
      */
@@ -218,6 +213,12 @@ public class RouteNode implements Runnable {
      */
     private boolean m_enableBroadcast;
 
+    /**
+     * Keep track of the last bcast time
+     */
+    private int m_lastBcastTime;
+
+    private UdpReceive udpReceive;
 
     public RouteNode(int id, String ip, int port, ScheduledThreadPoolExecutor exec) throws IOException {
         //设置节点id
@@ -232,15 +233,10 @@ public class RouteNode implements Runnable {
         //选择器
         this.selector = Selector.open();
         this.dc.register(selector, SelectionKey.OP_READ);
-        //初始化消息队列
-        this.sendMessageQueue = new MessageQueue();
         this.recvMessageQueue = new MessageQueue();
         //线程池
         this.exec = exec;
-        //初始化路由表
-        this.m_routingTable = new RoutingTable(10);
-        this.m_seqNo = 1;
-        this.m_idCache = new IdCache(5000);
+
 
         this.m_rreqRetries = 2;
         this.m_ttlStart = 1;
@@ -250,11 +246,31 @@ public class RouteNode implements Runnable {
         this.m_rreqRateLimit = 10;
         this.m_rerrRateLimit = 10;
         //3s
-        //this.m_activeRouteTimeout = 3;
+        this.m_activeRouteTimeout = 3000;
         this.m_netDiameter = 35;
         //40ms
-        //this.m_nodeTraversalTime = 40;
-
+        this.m_nodeTraversalTime = 40;
+        this.m_netTraversalTime = (2 * m_netDiameter) * m_nodeTraversalTime;
+        this.m_pathDiscoveryTime = 2 * m_netTraversalTime;
+        this.m_myRouteTimeout = 2 * Math.max(m_pathDiscoveryTime, m_activeRouteTimeout);
+        //1s
+        this.m_helloInterval = 1000;
+        this.m_allowedHelloLoss = 2;
+        this.m_deletePeriod = 5 * Math.max(m_activeRouteTimeout, m_helloInterval);
+        this.m_nextHopWait = m_nodeTraversalTime + 10;
+        this.m_blackListTimeout = m_rreqRetries * m_netTraversalTime;
+        this.m_destinationOnly = false;
+        this.m_gratuitousReply = true;
+        this.m_enableHello = false;
+        //初始化路由表
+        this.m_routingTable = new RoutingTable(m_deletePeriod);
+        this.m_requestId = 0;
+        this.m_seqNo = 0;
+        this.m_rreqIdCache = new IdCache(m_pathDiscoveryTime);
+        this.m_nb = new RoutingNeighbor(m_helloInterval);
+        this.m_rreqCount = 0;
+        this.m_rerrCount = 0;
+        this.m_lastBcastTime = 0;
     }
 
     /**
@@ -264,11 +280,12 @@ public class RouteNode implements Runnable {
     public void run() {
         System.out.println("节点" + this.ipAddress + "启动");
         //该线程主要用来接收消息放入待处理消息队列
-        exec.submit(new UdpReceive(recvMessageQueue, selector));
+        this.udpReceive = new UdpReceive(recvMessageQueue, selector);
+        exec.submit(udpReceive);
         //定时任务线程启动
         AodvScheduleTask aodvScheduleTask = new AodvScheduleTask();
         exec.execute(aodvScheduleTask);
-        while (!Thread.interrupted()) {
+        while (flag_run) {
             try {
                 AodvMessage msg = this.recvMessageQueue.take();
                 dealMessage(msg);
@@ -277,19 +294,17 @@ public class RouteNode implements Runnable {
                 e.printStackTrace();
             }
         }
-        if (Thread.interrupted()) {
-            try {
-                this.dc.close();
-            } catch (IOException e) {
-                System.out.println("通道关闭失败");
-                e.printStackTrace();
-            }
-            try {
-                this.selector.close();
-            } catch (IOException e) {
-                System.out.println("选择器关闭失败");
-                e.printStackTrace();
-            }
+        try {
+            this.dc.close();
+        } catch (IOException e) {
+            System.out.println("通道关闭失败");
+            e.printStackTrace();
+        }
+        try {
+            this.selector.close();
+        } catch (IOException e) {
+            System.out.println("选择器关闭失败");
+            e.printStackTrace();
         }
     }
 
@@ -339,7 +354,7 @@ public class RouteNode implements Runnable {
 
         RREQ recv_rreq = (RREQ) msg.getObject();
         //rreq分组为自身节点发送
-        if (m_idCache.isDuplicate(recv_rreq.getOrigIpAddress(), recv_rreq.getRreqId())) {
+        if (this.m_rreqIdCache.isDuplicate(recv_rreq.getOrigIpAddress(), recv_rreq.getRreqId())) {
             //丢弃该rreq分组
             System.out.printf("节点%d 丢弃rreq消息：%d ", this.nodeId, recv_rreq.getRreqId());
             return;
@@ -363,17 +378,21 @@ public class RouteNode implements Runnable {
     private void receiveContent(AodvMessage msg) throws InterruptedException {
 
         MessageContent recvMsg = (MessageContent) msg.getObject();
-        RoutingTableEntry item = new RoutingTableEntry();
         //查看消息的目的地地址是不是自己
         if (recvMsg.getToAddress().equals(this.ipAddress)) {
             //消息到达目的地址，此次消息交付上层应用处理
             System.out.println("消息到达目的节点，交付上层应用。");
-        } else if (m_routingTable.lookupRoute(recvMsg.getToAddress(), item)) {
+            return;
+        }
+        RoutingTableEntry item = m_routingTable.lookupRoute(recvMsg.getToAddress());
+        if (item != null) {
             //生成待发送的消息
             msg.setLastHopAddress(ipAddress);
             msg.setNextHopAddress(item.getNextHop());
-            putSendMessage(msg);
-        } else if (recvMsg.getFromAddress().equals(this.ipAddress)) {
+            sendUdpMessage(msg);
+            return;
+        }
+        if (recvMsg.getFromAddress().equals(this.ipAddress)) {
             //如果没有相应的路由线路，则进行路由发现RREQ
             //putUntreatedMessage(msg);
             //如果本节点是该分组的源节点，说明没有到目的节点的路，此时发送RREQ找路
@@ -404,7 +423,6 @@ public class RouteNode implements Runnable {
             aodvMessage.setNextHopAddress(node.getIpAddress());
             aodvMessage.setLastHopAddress(this.ipAddress);
             aodvMessage.setObject(rreq);
-            putSendMessage(aodvMessage);
         }
 
     }
@@ -441,15 +459,6 @@ public class RouteNode implements Runnable {
         this.recvMessageQueue.put(msg);
     }
 
-    /**
-     * 将处理后的消息或者新消息放入发送队列
-     *
-     * @param msg
-     * @throws InterruptedException
-     */
-    public void putSendMessage(AodvMessage msg) throws InterruptedException {
-        this.sendMessageQueue.put(msg);
-    }
 
     public InetSocketAddress getIpAddress() {
         return ipAddress;
@@ -512,5 +521,28 @@ public class RouteNode implements Runnable {
 
     public void stopRouteNode() {
         this.flag_run = false;
+        this.udpReceive.stopUdpReceive();
     }
+
+
+    class HelloTimer implements Runnable {
+
+        /**
+         * When an object implementing interface <code>Runnable</code> is used
+         * to create a thread, starting the thread causes the object's
+         * <code>run</code> method to be called in that separately executing
+         * thread.
+         * <p>
+         * The general contract of the method <code>run</code> is that it may
+         * take any action whatsoever.
+         *
+         * @see Thread#run()
+         */
+        @Override
+        public void run() {
+
+        }
+    }
+
+
 }
