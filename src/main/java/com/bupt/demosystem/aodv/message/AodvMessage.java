@@ -37,6 +37,13 @@ public class AodvMessage implements Serializable {
     private InetSocketAddress lastHopAddress;
     private InetSocketAddress nextHopAddress;
 
+    /**
+     * 模拟ip协议
+     * 源地址和目的地址
+     */
+    private InetSocketAddress originAddress;
+    private InetSocketAddress dstAddress;
+
 
     private Object object;
 
@@ -91,6 +98,30 @@ public class AodvMessage implements Serializable {
 
     public void setCreateTime(LocalTime createTime) {
         this.createTime = createTime;
+    }
+
+    public int getTTL() {
+        return TTL;
+    }
+
+    public void setTTL(int TTL) {
+        this.TTL = TTL;
+    }
+
+    public InetSocketAddress getOriginAddress() {
+        return originAddress;
+    }
+
+    public void setOriginAddress(InetSocketAddress originAddress) {
+        this.originAddress = originAddress;
+    }
+
+    public InetSocketAddress getDstAddress() {
+        return dstAddress;
+    }
+
+    public void setDstAddress(InetSocketAddress dstAddress) {
+        this.dstAddress = dstAddress;
     }
 
     /**

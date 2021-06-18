@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author banbridge
@@ -38,6 +39,9 @@ public class RouteNode implements Runnable {
      * udp接收到消息后会放到，待处理的message队列，等待其他线程处理
      */
     private final MessageQueue recvMessageQueue;
+
+    /// A "drop-front" queue used by the routing layer to buffer packets to which it does not have a route.
+    private final MessageQueue m_queue;
 
     /**
      * 节点的经纬度和高度
@@ -220,6 +224,16 @@ public class RouteNode implements Runnable {
 
     private UdpReceive udpReceive;
 
+    /**
+     * RREQ rate limit timer
+     */
+    private RouteRequestRateLimitTimer m_rreqRateLimitTimer;
+
+    /**
+     * RERR rate limit timer
+     */
+    private RouteErrorRateLimitTimer m_rerrRateLimitTimer;
+
     public RouteNode(int id, String ip, int port, ScheduledThreadPoolExecutor exec) throws IOException {
         //设置节点id
         this.nodeId = id;
@@ -234,6 +248,7 @@ public class RouteNode implements Runnable {
         this.selector = Selector.open();
         this.dc.register(selector, SelectionKey.OP_READ);
         this.recvMessageQueue = new MessageQueue();
+        this.m_queue = new MessageQueue();
         //线程池
         this.exec = exec;
 
@@ -267,11 +282,15 @@ public class RouteNode implements Runnable {
         this.m_requestId = 0;
         this.m_seqNo = 0;
         this.m_rreqIdCache = new IdCache(m_pathDiscoveryTime);
-        this.m_nb = new RoutingNeighbor(m_helloInterval);
+        this.m_nb = new RoutingNeighbor(m_helloInterval, exec);
         this.m_rreqCount = 0;
         this.m_rerrCount = 0;
         this.m_lastBcastTime = 0;
+
+        this.m_rreqRateLimitTimer = new RouteRequestRateLimitTimer();
+        this.m_rerrRateLimitTimer = new RouteErrorRateLimitTimer();
     }
+
 
     /**
      * 本线程用来处理消息待处理消息队列的消息 并将新的要发送消息放入发送队列
@@ -282,9 +301,6 @@ public class RouteNode implements Runnable {
         //该线程主要用来接收消息放入待处理消息队列
         this.udpReceive = new UdpReceive(recvMessageQueue, selector);
         exec.submit(udpReceive);
-        //定时任务线程启动
-        AodvScheduleTask aodvScheduleTask = new AodvScheduleTask();
-        exec.execute(aodvScheduleTask);
         while (flag_run) {
             try {
                 AodvMessage msg = this.recvMessageQueue.take();
@@ -306,6 +322,23 @@ public class RouteNode implements Runnable {
             System.out.println("选择器关闭失败");
             e.printStackTrace();
         }
+    }
+
+    public void start() {
+        if (this.m_enableHello) {
+            this.m_nb.scheduleTimer();
+        }
+        exec.schedule(m_rreqRateLimitTimer, 1, TimeUnit.SECONDS);
+        exec.schedule(m_rerrRateLimitTimer, 1, TimeUnit.SECONDS);
+    }
+
+    /**
+     * if route exits and is valid, forward packet
+     *
+     * @return
+     */
+    boolean forwarding(AodvMessage msg) {
+
     }
 
     public void dealMessage(AodvMessage msg) throws InterruptedException {
@@ -352,7 +385,7 @@ public class RouteNode implements Runnable {
      */
     private void recvRequest(AodvMessage msg) {
 
-        RREQ recv_rreq = (RREQ) msg.getObject();
+        RreqHeader recv_rreq = (RreqHeader) msg.getObject();
         //rreq分组为自身节点发送
         if (this.m_rreqIdCache.isDuplicate(recv_rreq.getOrigIpAddress(), recv_rreq.getRreqId())) {
             //丢弃该rreq分组
@@ -410,7 +443,7 @@ public class RouteNode implements Runnable {
         //生成RREQ消息前，将RREQ ID加1
         autoIncrementRREQId();
         for (RouteNode node : neighborList) {
-            RREQ rreq = new RREQ();
+            RreqHeader rreq = new RreqHeader();
             AodvMessage aodvMessage = new AodvMessage();
             rreq.setRreqId(this.m_requestId);
             rreq.setDestIpAddress(toAddress);
@@ -527,17 +560,22 @@ public class RouteNode implements Runnable {
 
     class HelloTimer implements Runnable {
 
-        /**
-         * When an object implementing interface <code>Runnable</code> is used
-         * to create a thread, starting the thread causes the object's
-         * <code>run</code> method to be called in that separately executing
-         * thread.
-         * <p>
-         * The general contract of the method <code>run</code> is that it may
-         * take any action whatsoever.
-         *
-         * @see Thread#run()
-         */
+        @Override
+        public void run() {
+
+        }
+    }
+
+    class RouteRequestRateLimitTimer implements Runnable {
+
+        @Override
+        public void run() {
+
+        }
+    }
+
+    class RouteErrorRateLimitTimer implements Runnable {
+
         @Override
         public void run() {
 

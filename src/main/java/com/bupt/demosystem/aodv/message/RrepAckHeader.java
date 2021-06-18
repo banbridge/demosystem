@@ -8,8 +8,21 @@ package com.bupt.demosystem.aodv.message;
  * 这经常发生于节点怀疑链路不可靠或者只能单向传播，
  * RREP-ACK意义在于告知发送RREP的节点目的节点已经
  * 收到RREP消息，并且暗示了链路是双向传播和可靠的。
+0                   1
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Type      |   Reserved    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-public class RREP_ACK {
+public class RrepAckHeader {
 
+    private int m_reserved;
 
+    public RrepAckHeader(int m_reserved) {
+        this.m_reserved = m_reserved;
+    }
+
+    public RrepAckHeader() {
+        this.m_reserved = 0;
+    }
 }

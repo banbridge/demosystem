@@ -4,13 +4,15 @@ import java.net.InetSocketAddress;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author banbridge
  * @Classname RoutingNeighbor
  * @Date 2021/6/11 15:43
  */
-public class RoutingNeighbor {
+public class RoutingNeighbor implements Runnable {
 
     /**
      * 节点的id
@@ -19,9 +21,12 @@ public class RoutingNeighbor {
 
     private HashMap<InetSocketAddress, Neighbor> neighbors;
 
+    private ScheduledThreadPoolExecutor exec;
 
-    public RoutingNeighbor(int delay) {
+
+    public RoutingNeighbor(int delay, ScheduledThreadPoolExecutor exec) {
         this.delay = delay;
+        this.exec = exec;
         neighbors = new HashMap<>();
     }
 
@@ -77,7 +82,7 @@ public class RoutingNeighbor {
      */
 
     public void scheduleTimer() {
-
+        exec.schedule(this, 1, TimeUnit.SECONDS);
     }
 
     /**
@@ -89,6 +94,21 @@ public class RoutingNeighbor {
     }
 
 
+    /**
+     * When an object implementing interface <code>Runnable</code> is used
+     * to create a thread, starting the thread causes the object's
+     * <code>run</code> method to be called in that separately executing
+     * thread.
+     * <p>
+     * The general contract of the method <code>run</code> is that it may
+     * take any action whatsoever.
+     *
+     * @see Thread#run()
+     */
+    @Override
+    public void run() {
+        purge();
+    }
 }
 
 
