@@ -36,7 +36,7 @@ public class NetController {
 
     @RequestMapping(value = "test")
     public String test() {
-        return "test";
+        return "vue-test";
     }
 
     /**

@@ -16,13 +16,13 @@ package com.bupt.demosystem.aodv.message;
  */
 public class RrepAckHeader {
 
-    private int m_reserved;
+    private int reserved;
 
-    public RrepAckHeader(int m_reserved) {
-        this.m_reserved = m_reserved;
+    public RrepAckHeader(int reserved) {
+        this.reserved = reserved;
     }
 
     public RrepAckHeader() {
-        this.m_reserved = 0;
+        this.reserved = 0;
     }
 }

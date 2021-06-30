@@ -37,126 +37,126 @@ public class RrepHeader {
     /**
      * A - acknowledgment required flag
      */
-    private byte m_flags;
+    private byte flags;
 
     /**
      * Prefix Size
      */
-    private byte m_prefixSize;
+    private byte prefixSize;
 
     /**
      * 从源节点到目的节点经过的节点数
      */
-    private int m_hopCount;
+    private int hopCount;
 
 
     /**
      * 目标接收ip
      */
-    private InetSocketAddress m_dst;
+    private InetSocketAddress dst;
 
     /**
      * The destination sequence number associated to the route.
      */
-    private int m_dstSeqNo;
+    private int dstSeqNo;
 
     /**
      * rreq发起者ip地址
      */
-    private InetSocketAddress m_origin;
+    private InetSocketAddress origin;
 
     /**
      * 节点接收的时间（ms），rrep认为路由是有效的，节点只有在这段时间前收到该条RREP信息，才承认RREP信息有效，否则则视为无效
      */
-    private int m_lifeTime;
+    private int lifeTime;
 
-    public RrepHeader(byte m_prefixSize, int m_hopCount, InetSocketAddress m_dst, int m_dstSeqNo, InetSocketAddress m_origin, int m_lifeTime) {
-        this.m_flags = 0;
-        this.m_prefixSize = m_prefixSize;
-        this.m_hopCount = m_hopCount;
-        this.m_dst = m_dst;
-        this.m_dstSeqNo = m_dstSeqNo;
-        this.m_origin = m_origin;
-        this.m_lifeTime = m_lifeTime;
+    public RrepHeader(byte prefixSize, int hopCount, InetSocketAddress dst, int dstSeqNo, InetSocketAddress origin, int lifeTime) {
+        this.flags = 0;
+        this.prefixSize = prefixSize;
+        this.hopCount = hopCount;
+        this.dst = dst;
+        this.dstSeqNo = dstSeqNo;
+        this.origin = origin;
+        this.lifeTime = lifeTime;
     }
 
 
     public void setHello(InetSocketAddress origin, int srcSeqNo, int lifeTime) {
-        this.m_flags = 0;
-        this.m_prefixSize = 0;
-        this.m_hopCount = 0;
-        this.m_dst = origin;
-        this.m_dstSeqNo = srcSeqNo;
-        this.m_origin = origin;
-        this.m_lifeTime = lifeTime;
+        this.flags = 0;
+        this.prefixSize = 0;
+        this.hopCount = 0;
+        this.dst = origin;
+        this.dstSeqNo = srcSeqNo;
+        this.origin = origin;
+        this.lifeTime = lifeTime;
     }
 
     public void setAckRequired(boolean f) {
         if (f) {
-            this.m_flags |= (1 << 6);
+            this.flags |= (1 << 6);
         } else {
-            this.m_flags &= ~(1 << 6);
+            this.flags &= ~(1 << 6);
         }
     }
 
     public boolean getAckRequired() {
-        return (this.m_flags & (1 << 6)) > 0;
+        return (this.flags & (1 << 6)) > 0;
     }
 
-    public byte getM_flags() {
-        return m_flags;
+    public byte getFlags() {
+        return flags;
     }
 
-    public void setM_flags(byte m_flags) {
-        this.m_flags = m_flags;
+    public void setFlags(byte flags) {
+        this.flags = flags;
     }
 
-    public byte getM_prefixSize() {
-        return m_prefixSize;
+    public byte getPrefixSize() {
+        return prefixSize;
     }
 
-    public void setM_prefixSize(byte m_prefixSize) {
-        this.m_prefixSize = m_prefixSize;
+    public void setPrefixSize(byte prefixSize) {
+        this.prefixSize = prefixSize;
     }
 
-    public int getM_hopCount() {
-        return m_hopCount;
+    public int getHopCount() {
+        return hopCount;
     }
 
-    public void setM_hopCount(int m_hopCount) {
-        this.m_hopCount = m_hopCount;
+    public void setHopCount(int hopCount) {
+        this.hopCount = hopCount;
     }
 
-    public InetSocketAddress getM_dst() {
-        return m_dst;
+    public InetSocketAddress getDst() {
+        return dst;
     }
 
-    public void setM_dst(InetSocketAddress m_dst) {
-        this.m_dst = m_dst;
+    public void setDst(InetSocketAddress dst) {
+        this.dst = dst;
     }
 
-    public int getM_dstSeqNo() {
-        return m_dstSeqNo;
+    public int getDstSeqNo() {
+        return dstSeqNo;
     }
 
-    public void setM_dstSeqNo(int m_dstSeqNo) {
-        this.m_dstSeqNo = m_dstSeqNo;
+    public void setDstSeqNo(int dstSeqNo) {
+        this.dstSeqNo = dstSeqNo;
     }
 
-    public InetSocketAddress getM_origin() {
-        return m_origin;
+    public InetSocketAddress getOrigin() {
+        return origin;
     }
 
-    public void setM_origin(InetSocketAddress m_origin) {
-        this.m_origin = m_origin;
+    public void setOrigin(InetSocketAddress origin) {
+        this.origin = origin;
     }
 
-    public int getM_lifeTime() {
-        return m_lifeTime;
+    public int getLifeTime() {
+        return lifeTime;
     }
 
-    public void setM_lifeTime(int m_lifeTime) {
-        this.m_lifeTime = m_lifeTime;
+    public void setLifeTime(int lifeTime) {
+        this.lifeTime = lifeTime;
     }
 
     @Override
@@ -164,11 +164,11 @@ public class RrepHeader {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RrepHeader that = (RrepHeader) o;
-        return m_flags == that.m_flags && m_prefixSize == that.m_prefixSize && m_hopCount == that.m_hopCount && m_dstSeqNo == that.m_dstSeqNo && m_lifeTime == that.m_lifeTime && Objects.equals(m_dst, that.m_dst) && Objects.equals(m_origin, that.m_origin);
+        return flags == that.flags && prefixSize == that.prefixSize && hopCount == that.hopCount && dstSeqNo == that.dstSeqNo && lifeTime == that.lifeTime && Objects.equals(dst, that.dst) && Objects.equals(origin, that.origin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(m_flags, m_prefixSize, m_hopCount, m_dst, m_dstSeqNo, m_origin, m_lifeTime);
+        return Objects.hash(flags, prefixSize, hopCount, dst, dstSeqNo, origin, lifeTime);
     }
 }

@@ -20,7 +20,7 @@
         <div class="col-10 text-white">
             <div class="card bg-light gyb-box" style="height: 98%; ">
                 <h3 class="card-header bg-info">
-                    网络关系图 <small>抗毁值：<span id="value_of_net">0.000</span></small>
+                    网络关系图 <small>抗毁值：<span id="value_of_net">{{netValue.toFixed(3)}}</span></small>
                 </h3>
                 <div class="card-body" style="height: 100%">
                     <div id="my_network">
@@ -73,6 +73,7 @@
                 message: 'Hello Vue.js!',
                 netJson: '',
                 numOfNode: 0,
+                netValue: 0.0,
             }
         },
         methods: {
@@ -89,6 +90,7 @@
                     } else {
                         updateNet(this.netJson, 'my_network');
                     }
+                    this.netValue = this.netJson.netValue;
                 }).catch((e) => {
                     alert("获取失败");
                 });

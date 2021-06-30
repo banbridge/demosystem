@@ -27,11 +27,11 @@ public class RoutingTable {
     /**
      * Deletion time for invalid routes
      */
-    private int m_badLinkLifetime;
+    private int badLinkLifetime;
 
-    public RoutingTable(int m_badLinkLifetime) {
+    public RoutingTable(int badLinkLifetime) {
         this.ipAddressEntry = new HashMap<>();
-        this.m_badLinkLifetime = m_badLinkLifetime;
+        this.badLinkLifetime = badLinkLifetime;
     }
 
     /**
@@ -151,7 +151,7 @@ public class RoutingTable {
         for (InetSocketAddress id : unreachable.keySet()) {
             RoutingTableEntry rte = ipAddressEntry.get(id);
             if (rte.getFlag() == RouterFlags.VALID) {
-                rte.Invalidate(m_badLinkLifetime);
+                rte.Invalidate(badLinkLifetime);
             }
         }
     }
@@ -187,7 +187,7 @@ public class RoutingTable {
                     return true;
                 } else if (entry.getValue().getFlag() == RouterFlags.VALID) {
                     RoutingTableEntry rt = entry.getValue();
-                    rt.Invalidate(m_badLinkLifetime);
+                    rt.Invalidate(badLinkLifetime);
                     entry.setValue(rt);
                 }
             }
@@ -211,12 +211,12 @@ public class RoutingTable {
     }
 
 
-    public int getM_badLinkLifetime() {
-        return m_badLinkLifetime;
+    public int getbadLinkLifetime() {
+        return badLinkLifetime;
     }
 
-    public void setM_badLinkLifetime(int m_badLinkLifetime) {
-        this.m_badLinkLifetime = m_badLinkLifetime;
+    public void setbadLinkLifetime(int badLinkLifetime) {
+        this.badLinkLifetime = badLinkLifetime;
     }
 }
 

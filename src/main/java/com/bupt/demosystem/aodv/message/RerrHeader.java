@@ -23,16 +23,16 @@ import java.util.HashMap;
  */
 public class RerrHeader {
 
-    private byte m_flags;
+    private byte flags;
 
-    private byte m_reserved;
+    private byte reserved;
 
-    private HashMap<InetSocketAddress, Integer> m_unreachableDstSeqNo;
+    private HashMap<InetSocketAddress, Integer> unreachableDstSeqNo;
 
     public RerrHeader() {
-        this.m_flags = 0;
-        this.m_reserved = 0;
-        this.m_unreachableDstSeqNo = new HashMap<>();
+        this.flags = 0;
+        this.reserved = 0;
+        this.unreachableDstSeqNo = new HashMap<>();
     }
 
 
@@ -44,9 +44,9 @@ public class RerrHeader {
      */
     public void SetNoDelete(boolean f) {
         if (f) {
-            this.m_flags |= (1 << 0);
+            this.flags |= (1 << 0);
         } else {
-            this.m_flags &= ~(1 << 0);
+            this.flags &= ~(1 << 0);
         }
     }
 
@@ -55,7 +55,7 @@ public class RerrHeader {
      * \return the no delete flag
      */
     public boolean GetNoDelete() {
-        return (this.m_flags & (1 << 0)) > 0;
+        return (this.flags & (1 << 0)) > 0;
     }
 
     /**
@@ -65,11 +65,11 @@ public class RerrHeader {
      * \return false if we already added maximum possible number of unreachable destinations
      */
     public boolean AddUnDestination(InetSocketAddress dst, int seqNo) {
-        if (m_unreachableDstSeqNo.containsKey(dst)) {
+        if (unreachableDstSeqNo.containsKey(dst)) {
             return true;
         }
         assert GetDestCount() < 255;
-        m_unreachableDstSeqNo.put(dst, seqNo);
+        unreachableDstSeqNo.put(dst, seqNo);
         return true;
     }
 
@@ -79,24 +79,24 @@ public class RerrHeader {
      * \return true on success
      */
     public boolean RemoveUnDestination(InetSocketAddress dst) {
-        if (m_unreachableDstSeqNo.isEmpty()) {
+        if (unreachableDstSeqNo.isEmpty()) {
             return false;
         }
-        return m_unreachableDstSeqNo.remove(dst) == null;
+        return unreachableDstSeqNo.remove(dst) == null;
     }
 
     /// Clear header
     void Clear() {
-        m_flags = 0;
-        m_reserved = 0;
-        m_unreachableDstSeqNo.clear();
+        flags = 0;
+        reserved = 0;
+        unreachableDstSeqNo.clear();
     }
 
     /**
      * \returns number of unreachable destinations in RERR message
      */
     public int GetDestCount() {
-        return m_unreachableDstSeqNo.size();
+        return unreachableDstSeqNo.size();
     }
 
 }

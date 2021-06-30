@@ -41,16 +41,18 @@ public class UdpReceive implements Runnable {
 
     @Override
     public void run() {
-        while (flag_run) {
-            try {
+        try {
+            while (flag_run) {
+
                 if (selector.select(1) == 0) {
                     continue;
                 }
                 handReceive();
-            } catch (IOException | InterruptedException e) {
 
-                e.printStackTrace();
             }
+        } catch (IOException | InterruptedException e) {
+
+            e.printStackTrace();
         }
 
     }
@@ -78,7 +80,7 @@ public class UdpReceive implements Runnable {
 
     }
 
-    public void stopUdpReceive() {
+    public void stop() {
         this.flag_run = false;
     }
 }

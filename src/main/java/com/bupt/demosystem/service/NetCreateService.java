@@ -52,20 +52,13 @@ public class NetCreateService {
             node.setY(5 + random.nextInt(90));
 
             type = random.nextInt(SIZE_OF_TYPE);
-            clusterID = getClusterArea(node.getX(), node.getY());
             if (i < 3) {
                 type = 1;
             }
-            if (!cluster_map.containsKey(clusterID)) {
-                cluster_map.put(clusterID, new LinkedList<Integer>());
-            }
-            LinkedList<Integer> linklist_cluster = cluster_map.get(clusterID);
+
             node.setId(i);
-            linklist_cluster.add(node.getId());
-            cluster_map.put(clusterID, linklist_cluster);
             node.setCapacity(cap);
             node.setType(type);
-            node.setCluster(clusterID);
             node.setIp("192.168.1." + i);
 
             nodes.add(node);
@@ -95,39 +88,24 @@ public class NetCreateService {
             }
         }
 
-        List<Double> invln = NetUtil.getInvulnerability(map);
+        double[] invln = NetUtil.getInvulnerability(map);
         double netVal = 0;
-        for (int i = 0; i < invln.size(); i++) {
-            double nodeVal = invln.get(i);
+        double nodeVal = 0.0;
+        for (int i = 0; i < invln.length; i++) {
+            nodeVal = invln[i];
+            System.out.println(nodeVal);
             if (nodeVal != 0) {
                 netVal += (nodeVal * Math.log(nodeVal));
             }
             Node node = nodes.get(i);
             node.setInvulnerability(nodeVal);
-            nodes.set(i, node);
+
         }
         net.setNetValue(-netVal);
         net.setNodeList(nodes);
         net.setEdgeList(edges);
         logger.info("生成成功，规模为:" + n + " " + net.getNetValue());
         return net;
-    }
-
-    private int getClusterArea(int x, int y) {
-        if (x < 50) {
-            if (y < 50) {
-                return 0;
-            }
-            return 2;
-        }
-        if (x >= 50) {
-            if (y < 50) {
-                return 1;
-            }
-            return 3;
-        }
-
-        return 0;
     }
 
 }

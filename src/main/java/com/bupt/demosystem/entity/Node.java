@@ -12,7 +12,7 @@ public class Node {
     private int type;
     private int x;
     private int y;
-    private int cluster;
+    private int z;
     private double invulnerability;
 
     public double getInvulnerability() {
@@ -87,12 +87,11 @@ public class Node {
         this.y = y;
     }
 
-
-    public int getCluster() {
-        return cluster;
+    public int getZ() {
+        return z;
     }
 
-    public void setCluster(int cluster) {
-        this.cluster = cluster;
+    public void setZ(int z) {
+        this.z = z;
     }
 }

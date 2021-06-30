@@ -158,6 +158,13 @@ public class RoutingTableEntry {
     }
 
     /**
+     * Increment the RREQ count
+     */
+    public void incrementRreqCnt() {
+        this.reqCount++;
+    }
+
+    /**
      * Inserts precursors in output parameter prec if they do not yet exist in vector
      * \param prec vector of precursor addresses
      */
@@ -231,8 +238,8 @@ public class RoutingTableEntry {
         return lifeTime;
     }
 
-    public void setLifeTime(LocalTime lifeTime) {
-        this.lifeTime = lifeTime;
+    public void setLifeTime(int longTime) {
+        this.lifeTime = this.lifeTime.plusNanos(longTime * 1000L);
     }
 
     public int getOtherFlag() {

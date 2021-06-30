@@ -111,7 +111,7 @@ function reconnect() {
     writeToInfo(n + "秒后重连");
     lockReconnect = true;
     wsCreateHandler && clearTimeout(wsCreateHandler);
-    wsCreateHandler = setTimeout(function () {
+    wsCreateHandler = setTimeout(() => {
         writeToInfo("重连....." + stompURL);
         createWebSocket();
         lockReconnect = false;

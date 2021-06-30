@@ -11,7 +11,6 @@ public class Network {
     private Integer id;
     //节点列表
     private List<Node> nodeList;
-    //
     private List<Edge> edgeList;
     private String modifiedTime;
     //抗毁度值 

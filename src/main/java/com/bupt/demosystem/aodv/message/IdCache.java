@@ -15,36 +15,36 @@ import java.util.LinkedList;
  */
 public class IdCache {
 
-    private LinkedList<UniqueId> m_idCache;
+    private final LinkedList<UniqueId> idCache;
     private int lifeTime;
 
     public IdCache() {
-        m_idCache = new LinkedList<>();
+        idCache = new LinkedList<>();
     }
 
     public IdCache(int lifeTime) {
         this.lifeTime = lifeTime;
-        m_idCache = new LinkedList<>();
+        idCache = new LinkedList<>();
     }
 
     private void purge() {
-        m_idCache.removeIf(id -> id.m_expire.isBefore(LocalTime.now()));
+        idCache.removeIf(id -> id.expire.isBefore(LocalTime.now()));
     }
 
     public boolean isDuplicate(InetSocketAddress addr, int id) {
         purge();
-        for (UniqueId uniqueId : m_idCache) {
-            if (uniqueId.m_address.equals(addr) && uniqueId.m_id == id) {
+        for (UniqueId uniqueId : idCache) {
+            if (uniqueId.address.equals(addr) && uniqueId.id == id) {
                 return true;
             }
         }
-        m_idCache.push(new UniqueId(addr, id, LocalTime.now().plus(lifeTime, ChronoUnit.MILLIS)));
+        idCache.push(new UniqueId(addr, id, LocalTime.now().plus(lifeTime, ChronoUnit.MILLIS)));
         return false;
     }
 
     public int getSize() {
         purge();
-        return m_idCache.size();
+        return idCache.size();
     }
 
 
@@ -57,14 +57,14 @@ public class IdCache {
     }
 
     private class UniqueId {
-        InetSocketAddress m_address;
-        int m_id;
-        LocalTime m_expire;
+        InetSocketAddress address;
+        int id;
+        LocalTime expire;
 
-        public UniqueId(InetSocketAddress m_address, int m_id, LocalTime m_expire) {
-            this.m_address = m_address;
-            this.m_id = m_id;
-            this.m_expire = m_expire;
+        public UniqueId(InetSocketAddress address, int id, LocalTime expire) {
+            this.address = address;
+            this.id = id;
+            this.expire = expire;
         }
     }
 

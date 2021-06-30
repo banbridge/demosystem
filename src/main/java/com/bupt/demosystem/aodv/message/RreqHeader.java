@@ -31,64 +31,64 @@ public class RreqHeader {
     /**
      * |J|R|G|D|U| bit flags
      */
-    private byte m_flags;
+    private byte flags;
 
     /**
      * not used (must be 0)
      */
-    private byte m_reserved;
+    private byte reserved;
 
     /**
      * 从源节点到收到RREQ消息节点所经过的跳数
      */
-    private int m_hopCount;
+    private int hopCount;
 
     /**
      * 路由请求消息表示，rrqId和发起节点的IP地址可以作为RREQ的消息的唯一标识
      */
-    private int m_requestID;
+    private int requestID;
 
     /**
      * 需要路由的目的地址
      */
-    private InetSocketAddress m_dst;
+    private InetSocketAddress dst;
 
     /**
      * 是源节点路由表中存储的关于目的节点的最新序列号，其序列号可能不是最新的序列号，也可能不存在，如果源节点没有目的节点序列号，则把标志为U设为1， 此时该字段无意义
      * The latest sequence number received in the past by the originator for any route towards the destination.
      */
-    private int m_dstSeqNo;
+    private int dstSeqNo;
 
     /**
      * rreq发起者的ip地址
      */
-    private InetSocketAddress m_origin;
+    private InetSocketAddress origin;
 
     /**
      * 由源节点自身维护，每次更新序列号，如果超过了系统最大值，重新设置为系统最下值
      * The current sequence number to be used in the route entry pointing towards the originator of the route request.
      */
-    private int m_originSeqNo;
+    private int originSeqNo;
 
     public RreqHeader() {
-        this.m_flags = 0;
-        this.m_reserved = 0;
-        this.m_hopCount = 0;
-        this.m_requestID = 0;
-        this.m_dstSeqNo = 0;
-        this.m_originSeqNo = 0;
+        this.flags = 0;
+        this.reserved = 0;
+        this.hopCount = 0;
+        this.requestID = 0;
+        this.dstSeqNo = 0;
+        this.originSeqNo = 0;
 
     }
 
     public RreqHeader(InetSocketAddress dst, InetSocketAddress origin) {
-        this.m_flags = 0;
-        this.m_reserved = 0;
-        this.m_hopCount = 0;
-        this.m_requestID = 0;
-        this.m_dstSeqNo = 0;
-        this.m_originSeqNo = 0;
-        this.m_dst = dst;
-        this.m_origin = origin;
+        this.flags = 0;
+        this.reserved = 0;
+        this.hopCount = 0;
+        this.requestID = 0;
+        this.dstSeqNo = 0;
+        this.originSeqNo = 0;
+        this.dst = dst;
+        this.origin = origin;
     }
 
     // Flags
@@ -99,9 +99,9 @@ public class RreqHeader {
      */
     public void SetGratuitousRrep(boolean f) {
         if (f) {
-            this.m_flags |= (1 << 5);
+            this.flags |= (1 << 5);
         } else {
-            this.m_flags &= ~(1 << 5);
+            this.flags &= ~(1 << 5);
         }
     }
 
@@ -110,7 +110,7 @@ public class RreqHeader {
      * \return the gratuitous RREP flag
      */
     public boolean GetGratuitousRrep() {
-        return (this.m_flags & (1 << 5)) > 0;
+        return (this.flags & (1 << 5)) > 0;
     }
 
     /**
@@ -119,9 +119,9 @@ public class RreqHeader {
      */
     public void SetDestinationOnly(boolean f) {
         if (f) {
-            this.m_flags |= (1 << 4);
+            this.flags |= (1 << 4);
         } else {
-            this.m_flags &= ~(1 << 4);
+            this.flags &= ~(1 << 4);
         }
     }
 
@@ -130,7 +130,7 @@ public class RreqHeader {
      * \return the Destination only flag
      */
     public boolean GetDestinationOnly() {
-        return (this.m_flags & (1 << 4)) > 0;
+        return (this.flags & (1 << 4)) > 0;
     }
 
     /**
@@ -139,9 +139,9 @@ public class RreqHeader {
      */
     public void SetUnknownSeqno(boolean f) {
         if (f) {
-            this.m_flags |= (1 << 3);
+            this.flags |= (1 << 3);
         } else {
-            this.m_flags &= ~(1 << 3);
+            this.flags &= ~(1 << 3);
         }
     }
 
@@ -150,72 +150,72 @@ public class RreqHeader {
      * \return the unknown sequence number flag
      */
     public boolean GetUnknownSeqno() {
-        return (this.m_flags & (1 << 3)) > 0;
+        return (this.flags & (1 << 3)) > 0;
     }
 
 
-    public byte getM_flags() {
-        return m_flags;
+    public byte getFlags() {
+        return flags;
     }
 
-    public void setM_flags(byte m_flags) {
-        this.m_flags = m_flags;
+    public void setFlags(byte flags) {
+        this.flags = flags;
     }
 
-    public byte getM_reserved() {
-        return m_reserved;
+    public byte getReserved() {
+        return reserved;
     }
 
-    public void setM_reserved(byte m_reserved) {
-        this.m_reserved = m_reserved;
+    public void setReserved(byte reserved) {
+        this.reserved = reserved;
     }
 
-    public int getM_hopCount() {
-        return m_hopCount;
+    public int getHopCount() {
+        return hopCount;
     }
 
-    public void setM_hopCount(int m_hopCount) {
-        this.m_hopCount = m_hopCount;
+    public void setHopCount(int hopCount) {
+        this.hopCount = hopCount;
     }
 
-    public int getM_requestID() {
-        return m_requestID;
+    public int getRequestID() {
+        return requestID;
     }
 
-    public void setM_requestID(int m_requestID) {
-        this.m_requestID = m_requestID;
+    public void setRequestID(int requestID) {
+        this.requestID = requestID;
     }
 
-    public InetSocketAddress getM_dst() {
-        return m_dst;
+    public InetSocketAddress getDst() {
+        return dst;
     }
 
-    public void setM_dst(InetSocketAddress m_dst) {
-        this.m_dst = m_dst;
+    public void setDst(InetSocketAddress dst) {
+        this.dst = dst;
     }
 
-    public int getM_dstSeqNo() {
-        return m_dstSeqNo;
+    public int getDstSeqNo() {
+        return dstSeqNo;
     }
 
-    public void setM_dstSeqNo(int m_dstSeqNo) {
-        this.m_dstSeqNo = m_dstSeqNo;
+    public void setDstSeqNo(int dstSeqNo) {
+        this.dstSeqNo = dstSeqNo;
     }
 
-    public InetSocketAddress getM_origin() {
-        return m_origin;
+    public InetSocketAddress getOrigin() {
+        return origin;
     }
 
-    public void setM_origin(InetSocketAddress m_origin) {
-        this.m_origin = m_origin;
+    public void setOrigin(InetSocketAddress origin) {
+        this.origin = origin;
     }
 
-    public int getM_originSeqNo() {
-        return m_originSeqNo;
+    public int getOriginSeqNo() {
+        return originSeqNo;
     }
 
-    public void setM_originSeqNo(int m_originSeqNo) {
-        this.m_originSeqNo = m_originSeqNo;
+    public void setOriginSeqNo(int originSeqNo) {
+        this.originSeqNo = originSeqNo;
     }
 
     @Override
@@ -223,11 +223,11 @@ public class RreqHeader {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RreqHeader that = (RreqHeader) o;
-        return m_flags == that.m_flags && m_reserved == that.m_reserved && m_hopCount == that.m_hopCount && m_requestID == that.m_requestID && m_dstSeqNo == that.m_dstSeqNo && m_originSeqNo == that.m_originSeqNo && m_dst.equals(that.m_dst) && m_origin.equals(that.m_origin);
+        return flags == that.flags && reserved == that.reserved && hopCount == that.hopCount && requestID == that.requestID && dstSeqNo == that.dstSeqNo && originSeqNo == that.originSeqNo && dst.equals(that.dst) && origin.equals(that.origin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(m_flags, m_reserved, m_hopCount, m_requestID, m_dst, m_dstSeqNo, m_origin, m_originSeqNo);
+        return Objects.hash(flags, reserved, hopCount, requestID, dst, dstSeqNo, origin, originSeqNo);
     }
 }

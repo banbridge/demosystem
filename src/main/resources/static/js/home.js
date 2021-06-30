@@ -3,7 +3,6 @@ let types = ["A类子网节点", "B类子网节点", "C类子网节点"];
 let cluster_colors = ['lightgreen', 'lightblue', 'rgba(117,132,161,0.19)'];
 let clusters = [];
 let cluster_members = null;
-
 const tooltip = new G6.Tooltip({
     offsetX: 70,
     offsetY: 40,
@@ -13,8 +12,7 @@ const tooltip = new G6.Tooltip({
         <li>ip: ${e.item.getModel().label}</li>
         <li >节点抗毁值：${e.item.getModel().invulnerability}</li>
         <li>负载量: ${e.item.getModel().cap}%</li>
-        <li>节点类型: ${types[e.item.getModel().class]}</li>
-        <li>cluster: ${e.item.getModel().cluster}</li>`
+        <li>节点类型: ${types[e.item.getModel().class]}</li>`
         return outDiv
     },
     itemTypes: ['node']

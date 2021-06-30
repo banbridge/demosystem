@@ -32,7 +32,7 @@ public class NetUtil {
     }
 
     // 得到各个节点的抗毁度
-    public static List<Double> getInvulnerability(int[][] map) {
+    public static double[] getInvulnerability(int[][] map) {
         int n = map.length;
         List<Double> ans = new ArrayList<>();
         double ans_val[] = new double[n];
@@ -55,7 +55,7 @@ public class NetUtil {
                     }
                 }
                 for (int k = 0; k < n; k++) {
-                    ans_val[k] += count[k] / paths.size();
+                    ans_val[k] += (count[k] * 1.0 / paths.size());
                 }
 
             }
@@ -74,10 +74,7 @@ public class NetUtil {
             }
 
         }
-        for (int i = 0; i < n; i++) {
-            ans.add(-ans_val[i] * (Math.log(ans_val[i])));
-        }
-        return ans;
+        return ans_val;
     }
 
     //得到一个节点的抗毁度
