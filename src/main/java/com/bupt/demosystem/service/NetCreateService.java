@@ -93,7 +93,6 @@ public class NetCreateService {
         double nodeVal = 0.0;
         for (int i = 0; i < invln.length; i++) {
             nodeVal = invln[i];
-            System.out.println(nodeVal);
             if (nodeVal != 0) {
                 netVal += (nodeVal * Math.log(nodeVal));
             }
