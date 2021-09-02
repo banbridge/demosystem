@@ -1,4 +1,5 @@
 'use strict';
+
 let map = null;
 let viewer = null;
 let models = [];
@@ -8,6 +9,41 @@ let primitive1;
 let primitive2;
 let clock1;
 let clock2;
+let graphicLayer = null;
+
+Date.prototype.format = function (fmt) {
+    let o = {
+        "M+": this.getMonth() + 1, //月份
+        "d+": this.getDate(), //日
+        "h+": this.getHours() % 12 == 0 ? 12 : this.getHours() % 12, //小时
+        "H+": this.getHours(), //小时
+        "m+": this.getMinutes(), //分
+        "s+": this.getSeconds(), //秒
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+        "S": this.getMilliseconds() //毫秒
+    };
+    let week = {
+        "0": "\u65e5",
+        "1": "\u4e00",
+        "2": "\u4e8c",
+        "3": "\u4e09",
+        "4": "\u56db",
+        "5": "\u4e94",
+        "6": "\u516d"
+    };
+    if (/(y+)/.test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    }
+    if (/(E+)/.test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, ((RegExp.$1.length > 1) ? (RegExp.$1.length > 2 ? "\u661f\u671f" : "\u5468") : "") + week[this.getDay() + ""]);
+    }
+    for (let k in o) {
+        if (new RegExp("(" + k + ")").test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        }
+    }
+    return fmt;
+};
 
 mapInit();
 
@@ -15,8 +51,8 @@ function mapInit() {
     Cesium.Ion.defaultAccessToken =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZDYxZDFlNS1kZWQ4LTQ5YTgtOGU1OS1mOGEwMzQ5ZWQxYTAiLCJpZCI6NTU2NTIsImlhdCI6MTYyMDgwNzEzN30.gfK2CAcCL_rqe3u4IWm6aOTa08U39DO8c7MK5ASJtyc';
     viewer = new Cesium.Viewer('container', {
-        animation: false, // [ Bool, 是否显示动画控件 ]
-        //shouldAnimate: true, // [ Bool, 是否开启动画 ]
+        animation: true, // [ Bool, 是否显示动画控件 ]
+        shouldAnimate: false, // [ Bool, 是否开启动画 ]
         timeline: false, // [ Bool, 是否显示时间线控件 ]
         requestRenderMode: true, // [ Bool, 启用请求渲染模式 ]
         sceneModePicker: false, // [ Bool, 是否显示场景切换控件 ]
@@ -75,8 +111,8 @@ function mapInit() {
             vrButton: false,
             fullscreenButton: true,
             navigationHelpButton: true,
-            animation: false,
-            shouldAnimate: true,
+            animation: true,
+            shouldAnimate: false,
             timeline: false,
             infoBox: false,
             geocoder: false,
@@ -104,22 +140,24 @@ function mapInit() {
         },
 
     });
-
+    graphicLayer = new mars3d.layer.GraphicLayer();
+    map.addLayer(graphicLayer);
+    //map.clock.shouldAnimate = false;
     testOther();
 }
 
 
 function testOther() {
     //showFeijiDemo();
-    //testShowCar();
     testPoint();
+    testPointLine();
 }
 
 
 function testPoint() {
-    let graphicLayer = new mars3d.layer.GraphicLayer();
+
     map.addLayer(graphicLayer);
-    let num_plain = 200;
+    let num_plain = 30;
 
     let center_point = [120.714274, 31.588498, 1492.53];
     let w = 1;
@@ -133,46 +171,29 @@ function testPoint() {
         p[1] = center_point[1] + l / 10 * c;
         p[2] = center_point[2] + Math.random() * 1000;
         point_array.push(p);
-        if (i <= 2) {
-            let m = new mars3d.graphic.ModelEntity({
-                name: '飞机' + i,
-                position: p,
-                style: {
-                    url: 'icons/Cesium_Air.glb',
-                    scale: 20,
-                    minimumPixelSize: 80,
-                    scaleByDistance: new Cesium.NearFarScalar(10000, 2.0, 500000, 0.7),
-                    label: {
-                        text: '193.268.0.' + i,
-                        font_size: 10,
-                        color: '#fff',
-                        pixelOffsetY: -10,
-                        scaleByDistance: new Cesium.NearFarScalar(10000, 1.0, 500000, 0.5),
-                    }
-                }
-            });
-            models.push(m);
-            graphicLayer.addGraphic(m);
-            continue;
-        }
-        let m = new mars3d.graphic.PointEntity({
-            name: '点：' + i,
+
+        let m = new mars3d.graphic.ModelEntity({
+            name: '飞机' + i,
             position: p,
             style: {
-                color: '#ff09',
-                pixelSize: 20,
-                scaleByDistance: new Cesium.NearFarScalar(10000, 2.0, 500000, 0.6),
+                url: 'icons/Cesium_Air.glb',
+                scale: 20,
+                minimumPixelSize: 80,
+                scaleByDistance: new Cesium.NearFarScalar(10000, 2.0, 500000, 0.1),
+                color: '#0d27e8',
                 label: {
-                    text: '193.268.0.' + i,
+                    text: '193.168.0.' + i,
                     font_size: 10,
                     color: '#fff',
                     pixelOffsetY: -10,
                     scaleByDistance: new Cesium.NearFarScalar(10000, 1.0, 500000, 0.5),
                 }
             }
-        })
+        });
         models.push(m);
-        m.addDynamicPosition(p, 1);
+        graphicLayer.addGraphic(m);
+        m.addDynamicPosition(p, 0);
+        m.addDynamicPosition(p, 0);
         graphicLayer.addGraphic(m);
     }
 
@@ -180,16 +201,19 @@ function testPoint() {
     let ellipse = new mars3d.graphic.CircleEntity({
         position: models[3].position,
         style: {
-            radius: 1500.0,
+            radius: 20500.0,
             material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.CircleWave, {
-                color: '#ff0000',
+                color: 'rgba(255,0,0,0.58)',
                 count: 1, //单个圆圈
-                speed: 10,
+                speed: 5,
             }),
         },
     })
     graphicLayer.addGraphic(ellipse);
-    for (let i = 0; i < 50; i++) {
+
+    initTree(models);
+    /**
+     for (let i = 0; i < 50; i++) {
         let line = new mars3d.graphic.PolylineEntity({
             positions: [
                 point_array[i],
@@ -198,33 +222,33 @@ function testPoint() {
             style: {
                 width: 3,
                 material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.LineFlow, {
-                    color: Cesium.Color.BLUE,
+                    color: 'rgba(5,37,245,0.57)',
                     image: 'icons/lineClr.png',
                     speed: 10,
                 }),
             },
         })
         graphicLayer.addGraphic(line);
+    }*/
+
+    for (let i = 0; i < 50; i++) {
+        let line = new mars3d.graphic.PolylineEntity({
+            positions: [
+                point_array[i],
+                point_array[i + 1],
+            ],
+            style: {
+                width: 2,
+                material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.PolylineOutline, {
+                    color: Cesium.Color.ORANGE,
+                }),
+            },
+        })
+        graphicLayer.addGraphic(line);
     }
 
-    let line2 = new mars3d.graphic.PolylineEntity({
-        positions: [
-            point_array[3],
-            point_array[4],
-        ],
-        style: {
-            width: 3,
-            material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.LineFlow, {
-                color: Cesium.Color.BLUE,
-                image: 'icons/lineClr.png',
-                speed: 10,
-            }),
-        },
-    })
-    graphicLayer.addGraphic(line2);
-
-
     let line1 = new mars3d.graphic.PolylineEntity({
+        id: 'line1',
         positions: [
             point_array[4],
             point_array[3],
@@ -232,7 +256,7 @@ function testPoint() {
         style: {
             width: 5,
             material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.LineFlow, {
-                color: Cesium.Color.PURPLE,
+                color: 'rgba(40,232,11,0.61)',
                 image: 'icons/lineClr.png',
                 speed: 10,
             }),
@@ -240,8 +264,6 @@ function testPoint() {
     })
     graphicLayer.addGraphic(line1);
 
-
-    initTree(models);
     $('#btnStart').click(() => {
         clock1 = setInterval(() => {
             for (let i = 0; i < num_plain; i++) {
@@ -249,47 +271,39 @@ function testPoint() {
                 models[i].addDynamicPosition(point_array[i], 1);
             }
             showPosition(models[0], point_array[0]);
-            ellipse.position = models[3].position;
+            //console.log(models[4])
+            let p_s = [mars3d.LatLngPoint.fromCartesian(models[4]), mars3d.LatLngPoint.fromCartesian(models[3])];
+            //line1.positions = [models[4].position, models[3].position];
         }, 1000);
 
     });
     $('#btnStop').click(() => {
-        alert('停止');
+        map.clock.shouldAnimate = false;
+        //alert('停止');
         clearInterval(clock1);
     });
 
-}
-
-
-function addLine(graphicLayer) {
-
-    for (let i = 0; i < models.length; i++) {
-        let primitiveCircleEntity = new mars3d.graphic.CircleEntity({
-            position: models[i].position,
-            style: {
-                radius: 4 * 1000.0,
-                material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.CircleWave, {
-                    color: '#ff0000',
-                    count: 1, //单个圆圈
-                    speed: 10,
-                }),
-            },
-        });
-        graphicLayer.addGraphic(primitiveCircleEntity);
-        primitiveCircleArray.push(primitiveCircleEntity);
-        //graphicLayer.addGraphic(primitiveConeTrack);
-    }
+    $('#btnViewLine').click(() => {
+        let line_ = graphicLayer.getGraphicById('line1');
+        line_.positions = [models[0].points];
+    })
 
 }
+
+
+function testPointLine() {
+
+}
+
 
 function showPosition(entity, p) {
-    $('#td_time').html(Cesium.JulianDate.toDate(map.clock.currentTime).format('yyyy-MM-dd HH:mm:ss'))
+    $('#td_time').html(Cesium.JulianDate.toDate(map.clock.currentTime).format('yyyy-MM-dd hh:mm:ss'))
     if (entity.position) {
         let point = mars3d.LatLngPoint.fromCartesian(entity.position);
         $('#td_x').html(point.lng);
         $('#td_y').html(point.lat);
         $('#td_z').html(point.alt);
-        $('#td_position').html(point);
+        $('#td_position').html(point.toString());
     }
 
 }
@@ -297,7 +311,7 @@ function showPosition(entity, p) {
 
 function initTree(arr, nameColum = 'name') {
     //初始化树
-    var setting = {
+    let setting = {
         check: {
             enable: true,
         },
@@ -312,23 +326,32 @@ function initTree(arr, nameColum = 'name') {
         },
     }
 
-    var zNodes = []
-    var pnode = {
+    let zNodes = []
+    let pnode1 = {
         id: -1,
-        name: '全部',
+        name: '群1',
         type: 'group',
         open: false,
         checked: true,
         icon: 'icons/folder1.png',
     }
-    zNodes.push(pnode)
+    let pnode2 = {
+        id: -2,
+        name: '群2',
+        type: 'group',
+        open: false,
+        checked: true,
+        icon: 'icons/folder1.png',
+    }
+    zNodes.push(pnode1)
+    zNodes.push(pnode2)
 
-    for (var i = 0, len = arr.length; i < len; i++) {
-        var item = arr[i]
-        var name = item[nameColum] || '未命名'
-        var node = {
+    for (let i = 0, len = arr.length; i < len; i++) {
+        let item = arr[i]
+        let name = item[nameColum] || '未命名'
+        let node = {
             id: i,
-            pId: pnode.id,
+            pId: i % 2 === 0 ? pnode1.id : pnode2.id,
             name: name,
             checked: true,
             icon: 'icons/layer1.png',
@@ -342,14 +365,14 @@ function initTree(arr, nameColum = 'name') {
 }
 
 function treeOverlays_onCheck(e, treeId) {
-    var zTree = $.fn.zTree.getZTreeObj(treeId)
+    let zTree = $.fn.zTree.getZTreeObj(treeId)
 
     //获得所有改变check状态的节点
-    var changedNodes = zTree.getChangeCheckedNodes()
-    for (var i = 0; i < changedNodes.length; i++) {
-        var treeNode = changedNodes[i]
+    let changedNodes = zTree.getChangeCheckedNodes()
+    for (let i = 0; i < changedNodes.length; i++) {
+        let treeNode = changedNodes[i]
         treeNode.checkedOld = treeNode.checked
-        var entity = models[treeNode.id];
+        let entity = models[treeNode.id];
         if (entity == null) {
             continue
         }
@@ -364,13 +387,12 @@ function treeOverlays_onCheck(e, treeId) {
 }
 
 function treeOverlays_onClick(event, treeId, treeNode) {
-    var entity = models[treeNode.id]
+    let entity = models[treeNode.id]
     if (entity == null) {
         return
     }
     entity.flyTo({
-        radius: 100000,
+        radius: 10000,
     })
     map.trackedEntity = entity._entity;
 }
-
