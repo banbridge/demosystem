@@ -80,7 +80,7 @@ public class NetController {
 
 
     //得到多条最短路径，
-    @RequestMapping("/getShortPath")
+    @RequestMapping(value = {"/getShortPath"})
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
         //ArrayList<Integer> ans = new ArrayList<>();

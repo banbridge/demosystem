@@ -39,7 +39,7 @@
         <input class="btn btn-primary" id="btnStop" type="button" value="停止"/>
         <input class="btn btn-primary" id="btnStart" type="button" value="开始"/>
         <input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>
-
+        <input class="btn btn-primary" id="btnCancelTrack" type="button" value="取消跟踪"/>
         <table class="mars-table tb-border">
             <tr>
                 <td class="nametd">时间：</td>
@@ -63,6 +63,8 @@
             </tr>
 
         </table>
+        <input class="btn btn-primary" id="btnGetData" onclick="getDataFromServer()" type="button" value="请求数据"/>
+
     </div>
 
 
@@ -78,6 +80,8 @@
 <script src="/webjars/axios/0.21.1/dist/axios.min.js" th:src="@{webjars/axios/dist/axios.min.js}"></script>
 <script src="/static/lib/Cesium/Cesium.js" th:src="@{lib/Cesium/Cesium.js}"></script>
 <script src="/static/lib/mars3d/mars3d.js" th:src="@{lib/mars3d/mars3d.js}"></script>
+<script type="text/javascript" th:src="@{webjars/stomp-websocket/stomp.min.js}"></script>
+<script type="text/javascript" th:src="@{webjars/sockjs-client/sockjs.min.js}"></script>
 
 <script src="webjars/zTree/3.5.37/js/jquery.ztree.all.min.js"
         th:src="@{webjars/zTree/js/jquery.ztree.all.min.js}"></script>

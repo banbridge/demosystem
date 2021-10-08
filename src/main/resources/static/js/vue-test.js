@@ -1,21 +1,53 @@
 'use strict';
 
+
+let stompURL = null;
+let stompClient = null;
+let userID = null;
+let lockReconnect = false;
+let wsCreateHandler = null;
+
 let map = null;
 let viewer = null;
 let models = [];
-let point_array = [];
-let primitiveCircleArray = [];
-let primitive1;
-let primitive2;
-let clock1;
-let clock2;
 let graphicLayer = null;
+let center_point = [121, 31, 10000];
+let start_point1 = [120, 29, 10000];
+
+let path_array1 = [];
+let path_array2 = [];
+
+let id2property = [];
+
+let startTime;
+let endTime;
+
+path_array1.push(center_point);
+path_array2.push(start_point1);
+let perCellWidth = 0.05;
+let visitPointIndex = 0;
+
+let nodedata;
+
+let clock = null;
+
+let p;
+for (let i = 1; i < 200; i++) {
+    p = path_array1[i - 1];
+    let p_point = [p[0] + 0.05, p[1], p[2] + 10];
+    path_array1.push(p_point);
+    p = path_array2[i - 1];
+    p_point = [p[0] + 0.05, p[1], p[2] + 10];
+    path_array2.push(p_point);
+}
+
+//createWebSocket("cesium");
 
 Date.prototype.format = function (fmt) {
     let o = {
         "M+": this.getMonth() + 1, //月份
         "d+": this.getDate(), //日
-        "h+": this.getHours() % 12 == 0 ? 12 : this.getHours() % 12, //小时
+        "h+": this.getHours() % 12 === 0 ? 12 : this.getHours() % 12, //小时
         "H+": this.getHours(), //小时
         "m+": this.getMinutes(), //分
         "s+": this.getSeconds(), //秒
@@ -77,9 +109,9 @@ function mapInit() {
     map = new mars3d.Map(viewer, {
         scene: {
             center: {
-                y: 31.588498,
-                x: 120.714274,
-                z: 10492.53,
+                y: center_point[1],
+                x: center_point[0],
+                z: center_point[2] + 1000,
                 heading: 13.6,
                 pitch: -55.3,
                 roll: 0.1
@@ -150,148 +182,166 @@ function mapInit() {
 function testOther() {
     //showFeijiDemo();
     testPoint();
-    testPointLine();
+    //testPointLine();
 }
 
 
 function testPoint() {
+    startTime = viewer.clock.currentTime;
+    let totalSeconds = 60 * 60;
+    endTime = Cesium.JulianDate.addSeconds(startTime, totalSeconds, new Cesium.JulianDate());
+    viewer.clock.stopTime = endTime.clone();
+    viewer.clock.shouldAnimate = false;
 
-    map.addLayer(graphicLayer);
-    let num_plain = 30;
+    const cluster1HeadPositionProperty = new Cesium.SampledPositionProperty();
+    const cluster2HeadPositionProperty = new Cesium.SampledPositionProperty();
 
-    let center_point = [120.714274, 31.588498, 1492.53];
-    let w = 1;
-    let l = 1;
-    for (let i = 0; i < num_plain; i++) {
+    for (let i = 0; i < path_array1.length; i++) {
+        let time = Cesium.JulianDate.addSeconds(startTime, i, new Cesium.JulianDate());
+        let timePosition1_ = Cesium.Cartesian3.fromDegrees(
+            path_array1[i][0],
+            path_array1[i][1],
+            path_array1[i][2],
+        );
+        let timePosition2_ = Cesium.Cartesian3.fromDegrees(
+            path_array2[i][0],
+            path_array2[i][1],
+            path_array2[i][2],
+        );
 
-        let r = i / 10,
-            c = i % 10;
-        let p = [];
-        p[0] = center_point[0] + w / 10 * r;
-        p[1] = center_point[1] + l / 10 * c;
-        p[2] = center_point[2] + Math.random() * 1000;
-        point_array.push(p);
-
-        let m = new mars3d.graphic.ModelEntity({
-            name: '飞机' + i,
-            position: p,
-            style: {
-                url: 'icons/Cesium_Air.glb',
-                scale: 20,
-                minimumPixelSize: 80,
-                scaleByDistance: new Cesium.NearFarScalar(10000, 2.0, 500000, 0.1),
-                color: '#0d27e8',
-                label: {
-                    text: '193.168.0.' + i,
-                    font_size: 10,
-                    color: '#fff',
-                    pixelOffsetY: -10,
-                    scaleByDistance: new Cesium.NearFarScalar(10000, 1.0, 500000, 0.5),
-                }
+        cluster1HeadPositionProperty.addSample(time, timePosition1_);
+        cluster2HeadPositionProperty.addSample(time, timePosition2_);
+        viewer.entities.add({
+            description: `Location: (${path_array1[i][0]}, ${path_array1[i][1]}, ${path_array1[i][2]})`,
+            position: timePosition1_,
+            point: {
+                pixelSize: 10,
+                color: Cesium.Color.DARKORANGE,
+                material: Cesium.Color.DODGERBLUE.withAlpha(0.7),
             }
         });
-        models.push(m);
-        graphicLayer.addGraphic(m);
-        m.addDynamicPosition(p, 0);
-        m.addDynamicPosition(p, 0);
-        graphicLayer.addGraphic(m);
+
+        // viewer.entities.add({
+        //     description: `Location: (${path_array2[i][0]}, ${path_array2[i][1]}, ${path_array2[i][2]})`,
+        //     position: timePosition2_,
+        //     point: {
+        //         pixelSize: 10,
+        //         color: Cesium.Color.DARKORANGE,
+        //         material: Cesium.Color.DODGERBLUE.withAlpha(0.7),
+        //     }
+        // });
     }
 
+    let pathLineFuture = {
+        resolution: 1,
+        material: new Cesium.PolylineGlowMaterialProperty({
+            glowPower: 0.1,
+            color: Cesium.Color.YELLOW,
+        }),
+        width: 10,
+    };
 
-    let ellipse = new mars3d.graphic.CircleEntity({
-        position: models[3].position,
-        style: {
-            radius: 20500.0,
-            material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.CircleWave, {
-                color: 'rgba(255,0,0,0.58)',
-                count: 1, //单个圆圈
-                speed: 5,
-            }),
+    let ch1 = viewer.entities.add({
+        id: 'p1',
+        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+            start: startTime,
+            stop: endTime
+        })]),
+        position: cluster1HeadPositionProperty,
+        orientation: new Cesium.VelocityOrientationProperty(cluster1HeadPositionProperty),
+        model: {
+            uri: "icons/Cesium_Air.glb",
+            minimumPixelSize: 64,
         },
-    })
-    graphicLayer.addGraphic(ellipse);
-
-    initTree(models);
-    /**
-     for (let i = 0; i < 50; i++) {
-        let line = new mars3d.graphic.PolylineEntity({
-            positions: [
-                point_array[i],
-                point_array[i + 1],
-            ],
-            style: {
-                width: 3,
-                material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.LineFlow, {
-                    color: 'rgba(5,37,245,0.57)',
-                    image: 'icons/lineClr.png',
-                    speed: 10,
-                }),
-            },
-        })
-        graphicLayer.addGraphic(line);
-    }*/
-
-    for (let i = 0; i < 50; i++) {
-        let line = new mars3d.graphic.PolylineEntity({
-            positions: [
-                point_array[i],
-                point_array[i + 1],
-            ],
-            style: {
-                width: 2,
-                material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.PolylineOutline, {
-                    color: Cesium.Color.ORANGE,
-                }),
-            },
-        })
-        graphicLayer.addGraphic(line);
-    }
-
-    let line1 = new mars3d.graphic.PolylineEntity({
-        id: 'line1',
-        positions: [
-            point_array[4],
-            point_array[3],
-        ],
-        style: {
-            width: 5,
-            material: mars3d.MaterialUtil.createMaterialProperty(mars3d.MaterialType.LineFlow, {
-                color: 'rgba(40,232,11,0.61)',
-                image: 'icons/lineClr.png',
-                speed: 10,
-            }),
+        label: {
+            text: '簇首1',
+            font: '10pt monospace',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -9)
         },
-    })
-    graphicLayer.addGraphic(line1);
+        path: pathLineFuture,
+    });
+
+    let ch2 = viewer.entities.add({
+        id: 'p2',
+        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+            start: startTime,
+            stop: endTime
+        })]),
+        position: cluster2HeadPositionProperty,
+        orientation: new Cesium.VelocityOrientationProperty(cluster2HeadPositionProperty),
+        // point: {
+        //     pixelSize : 12,
+        //     color : Cesium.Color.ANTIQUEWHITE,
+        //     scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
+        // },
+        // label : {
+        //     text : '簇首2',
+        //     font : '10pt monospace',
+        //     style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        //     outlineWidth : 2,
+        //     verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+        //     pixelOffset : new Cesium.Cartesian2(0, -9)
+        // },
+        path: pathLineFuture,
+    });
+    ch1.position.setInterpolationOptions({
+        interpolationDegree: 2,
+        interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+    });
+    ch2.position.setInterpolationOptions({
+        interpolationDegree: 2,
+        interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+    });
+
+    models.push(ch1);
+    models.push(ch2);
+
+
+    initTree(models, 'id');
 
     $('#btnStart').click(() => {
-        clock1 = setInterval(() => {
-            for (let i = 0; i < num_plain; i++) {
-                point_array[i][1] = point_array[i][1] + 0.1;
-                models[i].addDynamicPosition(point_array[i], 1);
-            }
-            showPosition(models[0], point_array[0]);
-            //console.log(models[4])
-            let p_s = [mars3d.LatLngPoint.fromCartesian(models[4]), mars3d.LatLngPoint.fromCartesian(models[3])];
-            //line1.positions = [models[4].position, models[3].position];
-        }, 1000);
 
+        map.clock.shouldAnimate = true;
+        if (clock == null) {
+
+            clock = setInterval(() => {
+                visitPointIndex++;
+                console.log(id2property);
+                if (visitPointIndex < path_array1.length) {
+                    nodedata.nodeList.forEach((node) => {
+                        let nodePosition = Cesium.Cartesian3.fromDegrees(
+                            path_array1[visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
+                            path_array1[visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth,
+                            path_array1[visitPointIndex][2] + Math.random() * 100,
+                        );
+                        let timr = Cesium.JulianDate.addSeconds(startTime, visitPointIndex, new Cesium.JulianDate());
+                        id2property[node.id].addSample(timr, nodePosition);
+                        console.log(timr)
+                    });
+                } else {
+                    console.log('stop', visitPointIndex)
+                    clearInterval(clock);
+                }
+            }, 1000);
+        }
     });
+
     $('#btnStop').click(() => {
         map.clock.shouldAnimate = false;
-        //alert('停止');
-        clearInterval(clock1);
+        clearInterval(clock);
+        clock = null;
     });
 
     $('#btnViewLine').click(() => {
-        let line_ = graphicLayer.getGraphicById('line1');
-        line_.positions = [models[0].points];
+
+    });
+
+    $('#btnCancelTrack').click(() => {
+        viewer.trackedEntity = null;
     })
-
-}
-
-
-function testPointLine() {
 
 }
 
@@ -391,8 +441,152 @@ function treeOverlays_onClick(event, treeId, treeNode) {
     if (entity == null) {
         return
     }
-    entity.flyTo({
-        radius: 10000,
-    })
-    map.trackedEntity = entity._entity;
+    viewer.trackedEntity = entity;
 }
+
+
+function createWebSocket(userSessionID) {
+
+    userID = userSessionID;
+    stompURL = '/stomp';
+    try {
+        if (stompClient == null) {
+            let socket = new SockJS(stompURL);
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (info) {
+                console.log(info)
+                stompClient.subscribe("/all/greeting", function (response) {
+                    onWsMessage(response.body);
+                });
+            });
+
+        }
+
+    } catch (e) {
+        writeToInfo("连接失败，开始重连:" + e);
+        console.log(e)
+        reconnect();
+    }
+}
+
+
+function getDataFromServer() {
+
+    axios.get('/getNetInfo').then((res) => {
+        addNetToCesium(res.data);
+    }).catch((error) => {
+        console.log('ERROR', error);
+    })
+
+}
+
+function addNetToCesium(data) {
+    nodedata = data;
+    console.log(data);
+    data.nodeList.forEach((node) => {
+        let nodePositionProperty = new Cesium.SampledPositionProperty();
+        let nodePosition = Cesium.Cartesian3.fromDegrees(
+            path_array1[visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
+            path_array1[visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth,
+            path_array1[visitPointIndex][2] + Math.random() * 100,
+        );
+        nodePositionProperty.addSample(startTime, nodePosition);
+
+        let time = Cesium.JulianDate.addSeconds(startTime, 1, new Cesium.JulianDate());
+        nodePosition = Cesium.Cartesian3.fromDegrees(
+            path_array1[visitPointIndex + 1][0] + (node.x - 50) / 100 * perCellWidth,
+            path_array1[visitPointIndex + 1][1] + (node.y - 50) / 100 * perCellWidth,
+            path_array1[visitPointIndex + 1][2] + Math.random() * 100,
+        );
+        nodePositionProperty.addSample(time, nodePosition);
+        id2property[node.id] = nodePositionProperty;
+        let entity = viewer.entities.add({
+            id: node.id,
+            availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+                start: startTime,
+                stop: endTime
+            })]),
+            position: nodePositionProperty,
+            point: {
+                pixelSize: 12,
+                color: Cesium.Color.INDIGO,
+                scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
+            },
+            label: {
+                text: node.ip,
+                font: '10pt monospace',
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -19)
+            },
+            path: {
+                resolution: 1,
+                material: new Cesium.PolylineGlowMaterialProperty({
+                    glowPower: 0.1,
+                    color: Cesium.Color.BEIGE,
+                }),
+                width: 10,
+            },
+        });
+        models.push(entity);
+    });
+    initTree(models, 'id');
+    visitPointIndex++;
+}
+
+window.onunload = function () {
+    disconnect()
+}
+
+function disconnect() {
+
+    if (stompClient != null) {
+        stompClient.disconnect();
+    }
+    stompClient = null;
+    console.log("Disconnect");
+}
+
+function sendName() {
+    //stompClient.send("/ws/hellostomp", {}, $("#name").val());
+}
+
+function onWsOpen(evt) {
+
+}
+
+
+function onWsMessage(message) {
+    message = JSON.parse(message);
+    writeToInfo(message);
+}
+
+function onWsError(evt) {
+
+}
+
+function onWsClose(evt) {
+
+}
+
+function writeToInfo(message) {
+    //$("#greetings").append("<tr><td>" + message + "</td></tr>");
+    console.log(message);
+}
+
+function reconnect() {
+    if (lockReconnect) {
+        return;
+    }
+    let n = 10;
+    writeToInfo(n + "秒后重连");
+    lockReconnect = true;
+    wsCreateHandler && clearTimeout(wsCreateHandler);
+    wsCreateHandler = setTimeout(() => {
+        writeToInfo("重连....." + stompURL);
+        createWebSocket();
+        lockReconnect = false;
+    }, n * 1000);
+}
+
