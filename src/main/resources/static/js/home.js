@@ -294,6 +294,12 @@ function getData(net, id_canvas) {
             invulnerability: node.invulnerability,
             cluster: node.cluster
         })
+        node.edges.forEach((to) => {
+            edges.push({
+                source: node.id + "",
+                target: to + "",
+            })
+        })
     })
     $("#num_node").val(nodes.length + "");
     //console.log(nodes);
@@ -313,13 +319,6 @@ function getData(net, id_canvas) {
                 node.style.fill = colorls[2]
                 break;
         }
-    });
-
-    net.edgeList.forEach(function (edge) {
-        edges.push({
-            source: edge.from + "",
-            target: edge.to + "",
-        })
     });
 
     return {

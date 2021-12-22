@@ -2,6 +2,7 @@ package com.bupt.demosystem.util;
 
 import com.bupt.demosystem.entity.Edge;
 import com.bupt.demosystem.entity.Network;
+import com.bupt.demosystem.entity.Node;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,9 +18,12 @@ public class NetUtil {
     public static int[][] getMapFromNetWork(Network network) {
         int n = network.getNodeList().size();
         int[][] map = new int[n][n];
-        for (Edge edge : network.getEdgeList()) {
-            map[edge.getFrom()][edge.getTo()] = map[edge.getTo()][edge.getFrom()] = 1;
+        for (Node node : network.getNodeList()) {
+            for (Integer to : node.getEdges()) {
+                map[node.getId()][to] = 1;
+            }
         }
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (i != j && map[i][j] != 1) {

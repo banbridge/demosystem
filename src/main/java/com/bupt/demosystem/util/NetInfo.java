@@ -96,6 +96,16 @@ public class NetInfo {
         return null;
     }
 
+    /**
+     * 根据簇的id和节点id毁坏节点
+     *
+     * @param c_id
+     * @param n_id
+     */
+    public void destroyNode(int c_id, int n_id) {
+
+    }
+
 
 }
 

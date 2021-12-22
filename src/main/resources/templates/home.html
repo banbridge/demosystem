@@ -40,7 +40,7 @@
             </div>
             <div class="row m-auto text-dark ">
                 <label for="num_node" class="text-center ">节点数:</label>
-                <input type="number" id="num_node" class="form-control col-sm-2" value="20"/>
+                <input type="number" id="num_node" class="form-control col-sm-2" max="99" value="20"/>
                 <button type="button" class="btn btn-info click-button " onclick="createNewNet()">生成网络</button>
                 <a class="btn btn-info click-button" data-toggle="tooltip" data-placement="top"
                    title="按住 'shift' 并点选两个节点作为起点和终点。"
@@ -107,12 +107,17 @@
     }
 
     function createNewNet() {
+        let num = $("#num_node").val();
+        if (num < 0 || num > 99) {
+            alert("请输入0～99之间的值");
+            return;
+        }
         $.ajax({
             url: "/getNewNet",
             type: "GET",
             dataType: "JSON",
             data: {
-                num_node: $("#num_node").val(),
+                num_node: num,
             },
             error: function () {
                 alert("获取失败");

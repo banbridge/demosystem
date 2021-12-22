@@ -48,7 +48,6 @@ public class NetController {
     public ModelAndView homePage() {
         ModelAndView mv = new ModelAndView();
         mv.setViewName("home");
-        logger.info("homePage");
         return mv;
     }
 
@@ -97,6 +96,7 @@ public class NetController {
     @RequestMapping("/getNetByIndex")
     @ResponseBody
     public Network getNetByIndex(Integer index) {
+        logger.info("请求的index：" + index);
         return netInfo.getNetByIndex(index);
     }
 

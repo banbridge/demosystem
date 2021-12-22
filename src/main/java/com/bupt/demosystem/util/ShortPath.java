@@ -1,6 +1,7 @@
 package com.bupt.demosystem.util;
 
 import com.bupt.demosystem.entity.Network;
+import org.springframework.data.relational.core.sql.In;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -82,6 +83,11 @@ public class ShortPath {
         return paths;
     }
 
+    public ArrayList<LinkedList<Integer>> multiPathList(Network network, int from, int to) {
+        ArrayList<LinkedList<Integer>> paths = new ArrayList<>();
+        return paths;
+    }
+
     //Dijkstra算法 中的多邻接点与多条最短路径问题
     public static ArrayList<LinkedList<Integer>> multiPath(int[][] map, int source, int target) {
         ArrayList<LinkedList<Integer>> ans = new ArrayList<>();
@@ -128,6 +134,7 @@ public class ShortPath {
         }
         return ans;
     }
+
 
     private static void DFSPath(ArrayList<LinkedList<Integer>> ans, MultiArrayList[] preVertex, int source, int target, LinkedList<Integer> onePathList) {
         if (target == source) {

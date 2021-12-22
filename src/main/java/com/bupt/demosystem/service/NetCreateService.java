@@ -43,9 +43,7 @@ public class NetCreateService {
         Network net = new Network();
         net.setId(-1);
         List<Node> nodes = new ArrayList<>();
-        List<Edge> edges = new ArrayList<>();
-        HashMap<Integer, LinkedList<Integer>> cluster_map = new HashMap();
-        int cap, type, clusterID;
+        int cap, type;
         for (int i = 0; i < n; i++) {
             Node node = new Node();
             cap = 20 + random.nextInt(50);
@@ -57,7 +55,6 @@ public class NetCreateService {
             if (i < 3) {
                 type = 1;
             }
-
             node.setId(i);
             node.setCapacity(cap);
             node.setType(type);
@@ -81,30 +78,29 @@ public class NetCreateService {
         drtd.setMAX_COST(MAX_COST);
         drtd.setN(n);
         int[][] map = drtd.getMap();
-        int edge_count = 0;
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                if (map[i][j] == 1) {
-                    edges.add(new Edge(edge_count++, i, j));
-                }
-            }
-        }
+
 
         double[] invln = NetUtil.getInvulnerability(map);
         double netVal = 0;
         double nodeVal = 0.0;
-        for (int i = 0; i < invln.length; i++) {
+
+        for (int i = 0; i < n; i++) {
             nodeVal = invln[i];
             if (nodeVal != 0) {
                 netVal += (nodeVal * Math.log(nodeVal));
             }
             Node node = nodes.get(i);
             node.setInvulnerability(nodeVal);
-
+            for (int j = i + 1; j < n; j++) {
+                if (map[i][j] == 1) {
+                    node.addEdge(j);
+                    nodes.get(j).addEdge(i);
+                }
+            }
         }
         net.setNetValue(-netVal);
         net.setNodeList(nodes);
-        net.setEdgeList(edges);
+        net.setClusterId(0);
         logger.info("生成成功，规模为:" + n + " " + net.getNetValue());
         return net;
     }
