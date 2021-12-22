@@ -2,7 +2,6 @@ package com.bupt.demosystem.util;
 
 import com.bupt.demosystem.entity.Edge;
 import com.bupt.demosystem.entity.Network;
-import org.springframework.data.relational.core.sql.In;
 
 import java.util.ArrayList;
 import java.util.Arrays;

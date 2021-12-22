@@ -16,9 +16,24 @@
     <div class="col-1 "></div>
     <div class="col-10 text-white">
         <div class="card bg-light gyb-box" style="height: 98%; ">
+
             <h3 class="card-header bg-info">
                 网络关系图 <small>抗毁值：<span id="value_of_net">0.000</span></small>
+                <small style="float: right;">
+                    <h6>
+                        <select id="id_select_nets" class="form-select text-lg-right" onchange="selecOnChanged(this)"
+                                aria-label="Default select example">
+
+                        </select>
+                        <button class="btn btn-dark" onclick="selectClickAdd()">增加</button>
+                    </h6>
+
+
+                </small>
+
             </h3>
+
+
             <div class="card-body" style="height: 100%">
                 <div id="my_network">
                 </div>
@@ -26,7 +41,7 @@
             <div class="row m-auto text-dark ">
                 <label for="num_node" class="text-center ">节点数:</label>
                 <input type="number" id="num_node" class="form-control col-sm-2" value="20"/>
-                <button type="button" class="btn btn-info click-button " onclick="loadNet(1)">生成网络</button>
+                <button type="button" class="btn btn-info click-button " onclick="createNewNet()">生成网络</button>
                 <a class="btn btn-info click-button" data-toggle="tooltip" data-placement="top"
                    title="按住 'shift' 并点选两个节点作为起点和终点。"
                    onclick="findShortPath()">查看最短路径
@@ -63,33 +78,85 @@
         $('[data-toggle="tooltip"]').tooltip();
     });
     let graph = null;
+    init();
 
 
-    function loadNet(num) {
+    function init() {
+
+        loadNetWoks();
+    }
+
+    function loadNetWoks() {
         $.ajax({
-            url: num == 0 ? "/getNetInfo" : "/getNewNet",
+            url: "/getNetListSize",
+            type: "GET",
+            dataType: "JSON",
+            error: function (error) {
+                console.log(error)
+                alert("loadNetWoks获取size失败");
+            },
+            success(size) {
+                console.log(size)
+                for (let i = 0; i < size; i++) {
+                    $('#id_select_nets').append('<option value="' + i + '">' + ("net" + i) + '</option>')
+                }
+                getNetByIndex(0);
+            }
+        });
+
+    }
+
+    function createNewNet() {
+        $.ajax({
+            url: "/getNewNet",
             type: "GET",
             dataType: "JSON",
             data: {
-                num_node: $('#num_node').val(),
+                num_node: $("#num_node").val(),
             },
             error: function () {
                 alert("获取失败");
             },
             success(net) {
-                if (num === 0) {
-
-                    drawNet(net, 'my_network');
-                    to_page(1);
-                } else {
-                    updateNet(net, 'my_network');
-                }
-
+                loadNet(net);
             }
         });
     }
 
-    loadNet(0);
+    function selecOnChanged(obj) {
+        getNetByIndex(obj.value)
+    }
+
+    function getNetByIndex(index) {
+        $.ajax({
+            url: "/getNetByIndex",
+            type: "GET",
+            dataType: "JSON",
+            data: {
+                index: index,
+            },
+            error: function () {
+                alert("获取失败");
+            },
+            success(net) {
+                loadNet(net);
+            }
+        });
+    }
+
+    function selectClickAdd() {
+
+    }
+
+    function loadNet(net) {
+        if (graph == null) {
+            drawNet(net, 'my_network');
+            to_page(1);
+        } else {
+            updateNet(net, 'my_network');
+        }
+    }
+
 
     //跳转到哪一页
     function to_page(num) {

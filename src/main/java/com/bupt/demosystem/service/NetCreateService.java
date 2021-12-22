@@ -27,15 +27,17 @@ public class NetCreateService {
 
     /**
      * 随机生成节点，利用DRTD算法生成拓扑网络
-     *
-     * */
+     */
     public Network getNetwork() {
         int n = 20;
         return getNetwork(n);
     }
 
-
     public Network getNetwork(int n) {
+        return getNetwork(n, "192.168.1.");
+    }
+
+    public Network getNetwork(int n, String ipBase) {
         logger.info(n + "生成拓扑图中，请稍后。。。。。");
         Random random = new Random();
         Network net = new Network();
@@ -59,7 +61,7 @@ public class NetCreateService {
             node.setId(i);
             node.setCapacity(cap);
             node.setType(type);
-            node.setIp("192.168.1." + i);
+            node.setIp(ipBase + i);
 
             nodes.add(node);
         }

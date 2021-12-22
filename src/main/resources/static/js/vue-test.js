@@ -11,37 +11,29 @@ let map = null;
 let viewer = null;
 let models = [];
 let graphicLayer = null;
-let center_point = [121, 31, 10000];
-let start_point1 = [120, 29, 10000];
-
-let path_array1 = [];
-let path_array2 = [];
+let center_point = [121, 31, 1000];
+let start_point1 = [120, 29, 1000];
 
 let id2property = [];
 
 let startTime;
 let endTime;
 
-path_array1.push(center_point);
-path_array2.push(start_point1);
 let perCellWidth = 0.05;
 let visitPointIndex = 0;
 
-let nodedata;
+let pathClusterArray = new Map();
+let nodeClusterList = null;
 
 let clock = null;
 
-let p;
-for (let i = 1; i < 200; i++) {
-    p = path_array1[i - 1];
-    let p_point = [p[0] + 0.05, p[1], p[2] + 10];
-    path_array1.push(p_point);
-    p = path_array2[i - 1];
-    p_point = [p[0] + 0.05, p[1], p[2] + 10];
-    path_array2.push(p_point);
+function initAllData() {
+    pathClusterArray = new Map();
+    nodeClusterList = null;
+    id2property = [];
 }
 
-//createWebSocket("cesium");
+createWebSocket("cesium");
 
 Date.prototype.format = function (fmt) {
     let o = {
@@ -109,12 +101,12 @@ function mapInit() {
     map = new mars3d.Map(viewer, {
         scene: {
             center: {
-                y: center_point[1],
                 x: center_point[0],
-                z: center_point[2] + 1000,
-                heading: 13.6,
+                y: center_point[1],
+                z: center_point[2] + 100000,
+                heading: 120.6,
                 pitch: -55.3,
-                roll: 0.1
+                roll: 0.6
             },
             showSkyBox: false,
             showSkyAtmosphere: false, //关闭球周边的白色轮廓 map.scene.skyAtmosphere = false
@@ -174,176 +166,191 @@ function mapInit() {
     });
     graphicLayer = new mars3d.layer.GraphicLayer();
     map.addLayer(graphicLayer);
-    //map.clock.shouldAnimate = false;
+    map.clock.shouldAnimate = false;
     testOther();
 }
 
 
 function testOther() {
-    //showFeijiDemo();
-    testPoint();
-    //testPointLine();
+
 }
 
 
-function testPoint() {
+function clickCancelTrack() {
+    viewer.trackedEntity = null;
+}
+
+function clickStartDemo() {
+
+    if (clock == null) {
+
+        clock = setInterval(() => {
+            visitPointIndex++;
+
+            if (visitPointIndex < pathClusterArray[0].length) {
+                let cnt = 0;
+                for (let i = 0; i < nodeClusterList.length; i++) {
+                    nodeClusterList[i].nodeList.forEach((node) => {
+                        let nodePosition = Cesium.Cartesian3.fromDegrees(
+                            pathClusterArray[i][visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
+                            pathClusterArray[i][visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth + Math.random() * 0.01,
+                            pathClusterArray[i][visitPointIndex][2] + Math.random() * 500,
+                        );
+                        let timr = Cesium.JulianDate.addSeconds(startTime, visitPointIndex, new Cesium.JulianDate());
+                        id2property[cnt++].addSample(timr, nodePosition);
+                    });
+                }
+
+            } else {
+                console.log('stop', visitPointIndex)
+                clearInterval(clock);
+            }
+        }, 1000);
+    }
+    map.clock.shouldAnimate = true;
+}
+
+function clickStopDemo() {
+    map.clock.shouldAnimate = false;
+    clearInterval(clock);
+    clock = null;
+}
+
+function addNetToCesium(data) {
+    initAllData();
+    nodeClusterList = data;
+    console.log(nodeClusterList.length)
+    addClusterHeadLine(data.length);
+    for (let i = 0; i < data.length; i++) {
+        data[i].nodeList.forEach((node) => {
+            let nodePositionProperty = new Cesium.SampledPositionProperty();
+            let nodePosition = Cesium.Cartesian3.fromDegrees(
+                pathClusterArray[i][visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
+                pathClusterArray[i][visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth,
+                pathClusterArray[i][visitPointIndex][2] + Math.random() * 100,
+            );
+            nodePositionProperty.addSample(startTime, nodePosition);
+
+            let time = Cesium.JulianDate.addSeconds(startTime, 1, new Cesium.JulianDate());
+            nodePosition = Cesium.Cartesian3.fromDegrees(
+                pathClusterArray[i][visitPointIndex + 1][0] + (node.x - 50) / 100 * perCellWidth,
+                pathClusterArray[i][visitPointIndex + 1][1] + (node.y - 50) / 100 * perCellWidth,
+                pathClusterArray[i][visitPointIndex + 1][2] + Math.random() * 100,
+            );
+            nodePositionProperty.addSample(time, nodePosition);
+            id2property.push(nodePositionProperty);
+            let entity = viewer.entities.add({
+                id: i + "_" + node.id,
+                availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+                    start: startTime,
+                    stop: endTime
+                })]),
+                position: nodePositionProperty,
+                point: {
+                    pixelSize: 12,
+                    color: Cesium.Color.INDIGO,
+                    scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
+                },
+                label: {
+                    text: node.ip,
+                    font: '10pt monospace',
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    outlineWidth: 2,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    pixelOffset: new Cesium.Cartesian2(0, -19)
+                },
+                path: {
+                    resolution: 1,
+                    material: new Cesium.PolylineGlowMaterialProperty({
+                        glowPower: 0.1,
+                        color: Cesium.Color.BEIGE,
+                    }),
+                    width: 5,
+                },
+            });
+            models.push(entity);
+        });
+    }
+
+    initTree(models, 'id');
+    visitPointIndex++;
+}
+
+function addClusterHeadLine(len) {
+
     startTime = viewer.clock.currentTime;
-    let totalSeconds = 60 * 60;
+    let totalSeconds = 60 * 10;
     endTime = Cesium.JulianDate.addSeconds(startTime, totalSeconds, new Cesium.JulianDate());
     viewer.clock.stopTime = endTime.clone();
     viewer.clock.shouldAnimate = false;
+    let numsOfPoints = 200;
+    let clusterHeadPositionProperty = [];
 
-    const cluster1HeadPositionProperty = new Cesium.SampledPositionProperty();
-    const cluster2HeadPositionProperty = new Cesium.SampledPositionProperty();
 
-    for (let i = 0; i < path_array1.length; i++) {
-        let time = Cesium.JulianDate.addSeconds(startTime, i, new Cesium.JulianDate());
-        let timePosition1_ = Cesium.Cartesian3.fromDegrees(
-            path_array1[i][0],
-            path_array1[i][1],
-            path_array1[i][2],
-        );
-        let timePosition2_ = Cesium.Cartesian3.fromDegrees(
-            path_array2[i][0],
-            path_array2[i][1],
-            path_array2[i][2],
-        );
-
-        cluster1HeadPositionProperty.addSample(time, timePosition1_);
-        cluster2HeadPositionProperty.addSample(time, timePosition2_);
-        viewer.entities.add({
-            description: `Location: (${path_array1[i][0]}, ${path_array1[i][1]}, ${path_array1[i][2]})`,
-            position: timePosition1_,
-            point: {
-                pixelSize: 10,
-                color: Cesium.Color.DARKORANGE,
-                material: Cesium.Color.DODGERBLUE.withAlpha(0.7),
-            }
-        });
-
-        // viewer.entities.add({
-        //     description: `Location: (${path_array2[i][0]}, ${path_array2[i][1]}, ${path_array2[i][2]})`,
-        //     position: timePosition2_,
-        //     point: {
-        //         pixelSize: 10,
-        //         color: Cesium.Color.DARKORANGE,
-        //         material: Cesium.Color.DODGERBLUE.withAlpha(0.7),
-        //     }
-        // });
+    for (let i = 0; i < len; i++) {
+        const property1 = new Cesium.SampledPositionProperty();
+        let point = [center_point[0], center_point[1] + i * 2, center_point[2]]
+        pathClusterArray[i] = [];
+        pathClusterArray[i].push(point)
+        for (let j = 1; j < numsOfPoints; j++) {
+            let time = Cesium.JulianDate.addSeconds(startTime, j, new Cesium.JulianDate());
+            let p = pathClusterArray[i][j - 1];
+            let p_point = [p[0] + 0.05, p[1] + getRndInteger(0.001, 0.01), p[2] + 50];
+            pathClusterArray[i].push(p_point);
+            let p_point_ = Cesium.Cartesian3.fromDegrees(
+                p_point[0],
+                p_point[1],
+                p_point[2],
+            );
+            property1.addSample(time, p_point_);
+        }
+        clusterHeadPositionProperty.push(property1)
     }
+
 
     let pathLineFuture = {
         resolution: 1,
         material: new Cesium.PolylineGlowMaterialProperty({
             glowPower: 0.1,
-            color: Cesium.Color.YELLOW,
+            color: Cesium.Color.BROWN,
         }),
         width: 10,
     };
 
-    let ch1 = viewer.entities.add({
-        id: 'p1',
-        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-            start: startTime,
-            stop: endTime
-        })]),
-        position: cluster1HeadPositionProperty,
-        orientation: new Cesium.VelocityOrientationProperty(cluster1HeadPositionProperty),
-        model: {
-            uri: "icons/Cesium_Air.glb",
-            minimumPixelSize: 64,
-        },
-        label: {
-            text: '簇首1',
-            font: '10pt monospace',
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            outlineWidth: 2,
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset: new Cesium.Cartesian2(0, -9)
-        },
-        path: pathLineFuture,
-    });
-
-    let ch2 = viewer.entities.add({
-        id: 'p2',
-        availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-            start: startTime,
-            stop: endTime
-        })]),
-        position: cluster2HeadPositionProperty,
-        orientation: new Cesium.VelocityOrientationProperty(cluster2HeadPositionProperty),
-        // point: {
-        //     pixelSize : 12,
-        //     color : Cesium.Color.ANTIQUEWHITE,
-        //     scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
-        // },
-        // label : {
-        //     text : '簇首2',
-        //     font : '10pt monospace',
-        //     style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        //     outlineWidth : 2,
-        //     verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-        //     pixelOffset : new Cesium.Cartesian2(0, -9)
-        // },
-        path: pathLineFuture,
-    });
-    ch1.position.setInterpolationOptions({
-        interpolationDegree: 2,
-        interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
-    });
-    ch2.position.setInterpolationOptions({
-        interpolationDegree: 2,
-        interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
-    });
-
-    models.push(ch1);
-    models.push(ch2);
-
-
-    initTree(models, 'id');
-
-    $('#btnStart').click(() => {
-
-        map.clock.shouldAnimate = true;
-        if (clock == null) {
-
-            clock = setInterval(() => {
-                visitPointIndex++;
-                console.log(id2property);
-                if (visitPointIndex < path_array1.length) {
-                    nodedata.nodeList.forEach((node) => {
-                        let nodePosition = Cesium.Cartesian3.fromDegrees(
-                            path_array1[visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
-                            path_array1[visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth,
-                            path_array1[visitPointIndex][2] + Math.random() * 100,
-                        );
-                        let timr = Cesium.JulianDate.addSeconds(startTime, visitPointIndex, new Cesium.JulianDate());
-                        id2property[node.id].addSample(timr, nodePosition);
-                        console.log(timr)
-                    });
-                } else {
-                    console.log('stop', visitPointIndex)
-                    clearInterval(clock);
-                }
-            }, 1000);
-        }
-    });
-
-    $('#btnStop').click(() => {
-        map.clock.shouldAnimate = false;
-        clearInterval(clock);
-        clock = null;
-    });
-
-    $('#btnViewLine').click(() => {
-
-    });
-
-    $('#btnCancelTrack').click(() => {
-        viewer.trackedEntity = null;
-    })
+    for (let i = 0; i < clusterHeadPositionProperty.length; i++) {
+        //console.log( clusterHeadPositionProperty[i])
+        let ch1 = viewer.entities.add({
+            id: 'ch' + i,
+            availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+                start: startTime,
+                stop: endTime
+            })]),
+            position: clusterHeadPositionProperty[i],
+            orientation: new Cesium.VelocityOrientationProperty(clusterHeadPositionProperty[i]),
+            model: {
+                uri: "icons/Cesium_Air.glb",
+                minimumPixelSize: 60,
+            },
+            label: {
+                text: '簇首1',
+                font: '10pt monospace',
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -9)
+            },
+            path: pathLineFuture,
+        });
+        ch1.position.setInterpolationOptions({
+            interpolationDegree: 2,
+            interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+        });
+        models.push(ch1);
+    }
+    //initTree(models, 'id');
 
 }
+
 
 
 function showPosition(entity, p) {
@@ -357,7 +364,6 @@ function showPosition(entity, p) {
     }
 
 }
-
 
 function initTree(arr, nameColum = 'name') {
     //初始化树
@@ -377,31 +383,30 @@ function initTree(arr, nameColum = 'name') {
     }
 
     let zNodes = []
-    let pnode1 = {
-        id: -1,
-        name: '群1',
-        type: 'group',
-        open: false,
-        checked: true,
-        icon: 'icons/folder1.png',
-    }
-    let pnode2 = {
-        id: -2,
-        name: '群2',
-        type: 'group',
-        open: false,
-        checked: true,
-        icon: 'icons/folder1.png',
-    }
-    zNodes.push(pnode1)
-    zNodes.push(pnode2)
 
-    for (let i = 0, len = arr.length; i < len; i++) {
+    for (let i = 0; i < nodeClusterList.length; i++) {
+        console.log(models[i][nameColum]);
+        let pnode = {
+
+            id: models[i][nameColum],
+            name: models[i][nameColum],
+            type: 'group',
+            open: false,
+            checked: true,
+            icon: 'icons/folder1.png',
+        }
+        zNodes.push(pnode)
+    }
+
+    for (let i = nodeClusterList.length, len = arr.length; i < len; i++) {
+
         let item = arr[i]
         let name = item[nameColum] || '未命名'
+        let chId = models[name.split('_')[0]][nameColum];
+
         let node = {
             id: i,
-            pId: i % 2 === 0 ? pnode1.id : pnode2.id,
+            pId: chId,
             name: name,
             checked: true,
             icon: 'icons/layer1.png',
@@ -442,6 +447,7 @@ function treeOverlays_onClick(event, treeId, treeNode) {
         return
     }
     viewer.trackedEntity = entity;
+    entity.viewFrom = new Cesium.Cartesian3(-2080, -1715, 20000)
 }
 
 
@@ -472,7 +478,7 @@ function createWebSocket(userSessionID) {
 
 function getDataFromServer() {
 
-    axios.get('/getNetInfo').then((res) => {
+    axios.get('/test/getAllNets').then((res) => {
         addNetToCesium(res.data);
     }).catch((error) => {
         console.log('ERROR', error);
@@ -480,60 +486,6 @@ function getDataFromServer() {
 
 }
 
-function addNetToCesium(data) {
-    nodedata = data;
-    console.log(data);
-    data.nodeList.forEach((node) => {
-        let nodePositionProperty = new Cesium.SampledPositionProperty();
-        let nodePosition = Cesium.Cartesian3.fromDegrees(
-            path_array1[visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
-            path_array1[visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth,
-            path_array1[visitPointIndex][2] + Math.random() * 100,
-        );
-        nodePositionProperty.addSample(startTime, nodePosition);
-
-        let time = Cesium.JulianDate.addSeconds(startTime, 1, new Cesium.JulianDate());
-        nodePosition = Cesium.Cartesian3.fromDegrees(
-            path_array1[visitPointIndex + 1][0] + (node.x - 50) / 100 * perCellWidth,
-            path_array1[visitPointIndex + 1][1] + (node.y - 50) / 100 * perCellWidth,
-            path_array1[visitPointIndex + 1][2] + Math.random() * 100,
-        );
-        nodePositionProperty.addSample(time, nodePosition);
-        id2property[node.id] = nodePositionProperty;
-        let entity = viewer.entities.add({
-            id: node.id,
-            availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
-                start: startTime,
-                stop: endTime
-            })]),
-            position: nodePositionProperty,
-            point: {
-                pixelSize: 12,
-                color: Cesium.Color.INDIGO,
-                scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5),
-            },
-            label: {
-                text: node.ip,
-                font: '10pt monospace',
-                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                outlineWidth: 2,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0, -19)
-            },
-            path: {
-                resolution: 1,
-                material: new Cesium.PolylineGlowMaterialProperty({
-                    glowPower: 0.1,
-                    color: Cesium.Color.BEIGE,
-                }),
-                width: 10,
-            },
-        });
-        models.push(entity);
-    });
-    initTree(models, 'id');
-    visitPointIndex++;
-}
 
 window.onunload = function () {
     disconnect()
@@ -559,7 +511,7 @@ function onWsOpen(evt) {
 
 function onWsMessage(message) {
     message = JSON.parse(message);
-    writeToInfo(message);
+    //writeToInfo(message);
 }
 
 function onWsError(evt) {
@@ -590,3 +542,7 @@ function reconnect() {
     }, n * 1000);
 }
 
+
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}

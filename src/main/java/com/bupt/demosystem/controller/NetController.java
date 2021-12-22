@@ -34,10 +34,6 @@ public class NetController {
         this.netService = netService;
     }
 
-    @RequestMapping(value = "test")
-    public String test() {
-        return "vue-test";
-    }
 
     /**
      * 首页面
@@ -52,16 +48,17 @@ public class NetController {
         return mv;
     }
 
-    /**
-     * 得到网络信息
-     *
-     * @return
-     */
-    @RequestMapping("/getNetInfo")
-    @ResponseBody
-    public Network getNetInfo() {
-        return NetInfo.getNet();
-    }
+//    /**
+//     * 得到网络信息
+//     *
+//     * @return
+//     */
+//    @RequestMapping("/getNetInfo")
+//    @ResponseBody
+//    public Network getNetInfo() {
+//        return NetInfo.getNet();
+//    }
+
 
     /**
      * 根据传回的节点生成新的网络
@@ -72,10 +69,31 @@ public class NetController {
         if (num_node == null) {
             num_node = 20;
         }
+        System.out.println(num_node);
         Network net = netCreateService.getNetwork(num_node);
-        NetInfo.setNetwork(net);
+        NetInfo.setSelectNet(net);
         logger.info("getNewNet");
-        return NetInfo.getNet();
+        return NetInfo.getSelectNetIndex();
+    }
+
+    @RequestMapping("getNetList")
+    @ResponseBody
+    public List<Network> getNetList() {
+        return NetInfo.getAllNet();
+    }
+
+    @RequestMapping("getNetListSize")
+    @ResponseBody
+    public int getNetListSize() {
+        NetInfo.setSelectIndex(0);
+        logger.info("getNetListSize");
+        return NetInfo.getAllNet().size();
+    }
+
+    @RequestMapping("/getNetByIndex")
+    @ResponseBody
+    public Network getNetByIndex(Integer index) {
+        return NetInfo.getNetByIndex(index);
     }
 
 
@@ -84,7 +102,7 @@ public class NetController {
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
         //ArrayList<Integer> ans = new ArrayList<>();
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(NetInfo.getNet(), start, end);
+        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(NetInfo.getSelectNetIndex(), start, end);
 
         logger.info("getShortPath");
         return path;
@@ -124,7 +142,7 @@ public class NetController {
     @ResponseBody
     public boolean saveNet() {
         logger.info("saveNet");
-        Network net = NetInfo.getNet();
+        Network net = NetInfo.getSelectNetIndex();
         Network netResult = null;
         logger.info("net value:" + net.getNetValue());
         try {
@@ -154,7 +172,7 @@ public class NetController {
 
         try {
             net = netService.getNetwork(id);
-            NetInfo.setNetwork(net);
+            NetInfo.setSelectNet(net);
         } catch (Exception e) {
             System.out.println("出现异常！！！！！！");
             e.printStackTrace();

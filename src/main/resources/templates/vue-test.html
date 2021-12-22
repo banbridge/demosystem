@@ -36,10 +36,10 @@
     </div>
 
     <div class="infoview" style="overflow:auto;left:5px;right:auto; top:10px;max-height:90%;">
-        <input class="btn btn-primary" id="btnStop" type="button" value="停止"/>
-        <input class="btn btn-primary" id="btnStart" type="button" value="开始"/>
+        <input class="btn btn-primary" id="btnStop" onclick="clickStopDemo()" type="button" value="停止"/>
+        <input class="btn btn-primary" id="btnStart" type="button" onclick="clickStartDemo()" value="开始"/>
         <input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>
-        <input class="btn btn-primary" id="btnCancelTrack" type="button" value="取消跟踪"/>
+        <input class="btn btn-primary" id="btnCancelTrack" type="button" onclick="clickCancelTrack()" value="取消跟踪"/>
         <table class="mars-table tb-border">
             <tr>
                 <td class="nametd">时间：</td>
@@ -63,6 +63,7 @@
             </tr>
 
         </table>
+        <a class="btn btn-primary" href="/">主页</a>
         <input class="btn btn-primary" id="btnGetData" onclick="getDataFromServer()" type="button" value="请求数据"/>
 
     </div>

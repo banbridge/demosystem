@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.text.SimpleDateFormat;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * @author Banbridge
@@ -26,6 +28,7 @@ public class AnalyseController {
     public final SimpMessagingTemplate simpMessagingTemplate;
 
     public final NetCreateService netCreateService;
+
 
     public AnalyseController(SimpMessagingTemplate simpMessagingTemplate, NetCreateService netCreateService) {
         this.simpMessagingTemplate = simpMessagingTemplate;
@@ -48,14 +51,13 @@ public class AnalyseController {
         return message;
     }
 
-    @Scheduled(cron = "*/5 * * * * ?")
-    public void report() throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        String message = objectMapper.writeValueAsString(NetInfo.getNet());
-        //logger.info("The time is now {}", new Date());
-        simpMessagingTemplate.convertAndSend("/all/greeting", message);
-
-    }
+//    @Scheduled(cron = "*/5 * * * * ?")
+//    public void report() throws JsonProcessingException {
+//        ObjectMapper objectMapper = new ObjectMapper();
+//
+//        //String message = objectMapper.writeValueAsString(NetInfo.getSelectNetIndex());
+//        //logger.info("The time is now {}", new Date());
+//        //simpMessagingTemplate.convertAndSend("/all/greeting", message);
+//    }
 
 }
