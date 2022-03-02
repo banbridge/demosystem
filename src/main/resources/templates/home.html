@@ -184,7 +184,7 @@
             },
             success(result) {
                 if (result) {
-                    updateNet(net, 'my_network');
+                    updateNet(result, 'my_network');
                     alert("加载新网络成功");
                 } else {
                     alert("加载失败");

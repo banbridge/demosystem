@@ -35,7 +35,7 @@
 
     </div>
 
-    <div class="infoview" style="overflow:auto;left:5px;right:auto; top:10px;max-height:90%;">
+    <div class="infoview" style="overflow:auto;left:5px;right:auto; top:10px;max-height:40%;">
         <input class="btn btn-primary" id="btnStop" onclick="clickStopDemo()" type="button" value="停止"/>
         <input class="btn btn-primary" id="btnStart" type="button" onclick="clickStartDemo()" value="开始"/>
         <input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>
@@ -43,36 +43,75 @@
         <table class="mars-table tb-border">
             <tr>
                 <td class="nametd">时间：</td>
-                <td id="td_time"></td>
+                <td id="td_time" colspan="2"></td>
             </tr>
             <tr>
-                <td class="nametd">经度：</td>
-                <td id="td_x"></td>
-            </tr>
-            <tr>
-                <td class="nametd">纬度：</td>
-                <td id="td_y"></td>
-            </tr>
-            <tr>
-                <td class="nametd">高度：</td>
-                <td id="td_z"></td>
+                <!--                <td class="nametd">经度：</td>-->
+                <!--                <td id="td_x"></td>-->
+                <!--                <td class="nametd">纬度：</td>-->
+                <!--                <td id="td_y"></td>-->
+                <!--                <td class="nametd">高度：</td>-->
+                <!--                <td id="td_z"></td>-->
             </tr>
             <tr>
                 <td class="nametd">目标位置：</td>
-                <td id="td_position"></td>
+                <td id="td_position" colspan="2"></td>
+            </tr>
+            <tr>
+                <td class="nametd">总发送：
+                    <strong id="id_td_total_send">0</strong>
+                </td>
+
+                <td class="nametd">总接收：
+                    <strong id="id_td_total_recv">0</strong>
+                </td>
+
+                <td class="nametd">成功率：
+                    <strong id="id_td_total_rate">00.00</strong>%
+                </td>
+
             </tr>
 
         </table>
         <a class="btn btn-primary" href="/">主页</a>
         <input class="btn btn-primary" id="btnGetData" onclick="getDataFromServer()" type="button" value="请求数据"/>
-
+        <input class="btn btn-primary" id="btnDetroyNode" onclick="randomDestroyNode()" type="button" value="随机故障"/>
+        <input class="btn btn-primary" id="btnCountTranmit" onclick="showCountTranmit()" type="button" value="业务统计"/>
     </div>
 
 
-    <div class="infoview" style="overflow:auto;right:5px;left:auto; top:70px;max-height:70%;">
+    <div class="infoview" id="id_show_count_transmit"
+         style="overflow:auto; left:30%;right:auto; top:32%;max-height:40%; max-width: 25%; display: none">
+        <table class="mars-table tb-border">
+            <thead>
+            <tr style="color: #4db3ff">
+                <td class="nametd">节点</td>
+                <td class="nametd">发送</td>
+                <td class="nametd">接收</td>
+                <td class="nametd">传输率</td>
+            </tr>
+
+            </thead>
+            <tbody id="id_show_count_transmit_tbody">
+
+            </tbody>
+
+        </table>
+
+
+    </div>
+
+    <div class="infoview" id="id_show_route_info"
+         style="overflow:auto; left:5px;right:auto; top:32%;max-height:40%; max-width: 25%">
+
+
+    </div>
+
+    <div class="infoview" style="overflow:auto; right:5px;left:auto; top:70px;max-height:55%;">
 
         <ul class="ztree" id="treeOverlays"></ul>
     </div>
+
 
 </div>
 

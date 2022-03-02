@@ -46,8 +46,13 @@ public class ShortPath {
         }
         int to = target;
         while (to != source && to != -1) {
-            path.addFirst(to);
-            to = pre[to];
+            if (pre[to] != -1 && map[to][pre[to]] < MAX) {
+                path.addFirst(to);
+                to = pre[to];
+            } else {
+                path.clear();
+                break;
+            }
         }
         path.addFirst(source);
         return path;

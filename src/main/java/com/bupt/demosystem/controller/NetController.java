@@ -26,14 +26,18 @@ public class NetController {
     NetCreateService netCreateService;
     final
     NetService netService;
+    final
+    NetInfo netInfo;
+
 
     private final Logger logger = LoggerFactory.getLogger(NetController.class);
 
-    public NetController(NetCreateService netCreateService, NetService netService) {
+    public NetController(NetCreateService netCreateService, NetService netService, NetInfo netInfo) {
         this.netCreateService = netCreateService;
         this.netService = netService;
-    }
+        this.netInfo = netInfo;
 
+    }
 
     /**
      * 首页面
@@ -71,29 +75,29 @@ public class NetController {
         }
         System.out.println(num_node);
         Network net = netCreateService.getNetwork(num_node);
-        NetInfo.setSelectNet(net);
+        netInfo.setSelectNet(net);
         logger.info("getNewNet");
-        return NetInfo.getSelectNetIndex();
+        return netInfo.getSelectNetIndex();
     }
 
     @RequestMapping("getNetList")
     @ResponseBody
     public List<Network> getNetList() {
-        return NetInfo.getAllNet();
+        return netInfo.getAllNet();
     }
 
     @RequestMapping("getNetListSize")
     @ResponseBody
     public int getNetListSize() {
-        NetInfo.setSelectIndex(0);
+        netInfo.setSelectIndex(0);
         logger.info("getNetListSize");
-        return NetInfo.getAllNet().size();
+        return netInfo.getAllNet().size();
     }
 
     @RequestMapping("/getNetByIndex")
     @ResponseBody
     public Network getNetByIndex(Integer index) {
-        return NetInfo.getNetByIndex(index);
+        return netInfo.getNetByIndex(index);
     }
 
 
@@ -101,9 +105,17 @@ public class NetController {
     @RequestMapping(value = {"/getShortPath"})
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
-        //ArrayList<Integer> ans = new ArrayList<>();
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(NetInfo.getSelectNetIndex(), start, end);
+        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(netInfo.getSelectNetIndex(), start, end);
+        logger.info("getShortPath");
+        return path;
+    }
 
+
+    //得到多条最短路径，
+    @RequestMapping(value = {"/getShortPathIndex0"})
+    @ResponseBody
+    public ArrayList getShortPathIndex0(int start, int end) {
+        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(netInfo.getNet(), start, end);
         logger.info("getShortPath");
         return path;
     }
@@ -142,7 +154,7 @@ public class NetController {
     @ResponseBody
     public boolean saveNet() {
         logger.info("saveNet");
-        Network net = NetInfo.getSelectNetIndex();
+        Network net = netInfo.getSelectNetIndex();
         Network netResult = null;
         logger.info("net value:" + net.getNetValue());
         try {
@@ -166,20 +178,20 @@ public class NetController {
     // 将服务端更新成客户端加载的网络
     @RequestMapping(value = "loadNewNet")
     @ResponseBody
-    public boolean loadNewNet(int id) {
+    public Network loadNewNet(int id) {
         logger.info("loadNewNet:" + id);
         Network net = null;
 
         try {
             net = netService.getNetwork(id);
-            NetInfo.setSelectNet(net);
+            netInfo.setSelectNet(net);
         } catch (Exception e) {
             System.out.println("出现异常！！！！！！");
             e.printStackTrace();
-            return false;
+            return null;
         }
-        return true;
-    }
 
+        return netInfo.getSelectNetIndex();
+    }
 
 }

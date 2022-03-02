@@ -41,7 +41,6 @@ public class Network {
         this.id = id;
     }
 
-
     public String getModifiedTime() {
         return modifiedTime;
     }

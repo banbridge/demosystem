@@ -71,6 +71,15 @@ Date.prototype.format = function (fmt) {
 
 mapInit();
 
+//将路由信息显示
+function addInfoShow(str, color = '') {
+    let str_append = '<p style="color: ' + color + '">' + str + '<p>'
+    $("#id_show_route_info")
+        .prepend(str_append);
+}
+
+
+// 3D可视化参数初始化
 function mapInit() {
     Cesium.Ion.defaultAccessToken =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZDYxZDFlNS1kZWQ4LTQ5YTgtOGU1OS1mOGEwMzQ5ZWQxYTAiLCJpZCI6NTU2NTIsImlhdCI6MTYyMDgwNzEzN30.gfK2CAcCL_rqe3u4IWm6aOTa08U39DO8c7MK5ASJtyc';
@@ -167,25 +176,29 @@ function mapInit() {
     graphicLayer = new mars3d.layer.GraphicLayer();
     map.addLayer(graphicLayer);
     map.clock.shouldAnimate = false;
-    testOther();
-}
-
-
-function testOther() {
 
 }
 
 
+// 取消追踪节点
 function clickCancelTrack() {
     viewer.trackedEntity = null;
 }
 
+
+// 模拟节点下一个运行位置，并开始运行
 function clickStartDemo() {
 
     if (clock == null) {
 
         clock = setInterval(() => {
             visitPointIndex++;
+            let lenOfCluster1 = nodeClusterList[0].nodeList.length - 1;
+            let start = Math.round(Math.random() * lenOfCluster1);
+            let end = Math.round(Math.random() * lenOfCluster1);
+            if (start != end) {
+                sendRequestPath(start, end);
+            }
 
             if (visitPointIndex < pathClusterArray[0].length) {
                 let cnt = 0;
@@ -193,13 +206,14 @@ function clickStartDemo() {
                     nodeClusterList[i].nodeList.forEach((node) => {
                         let nodePosition = Cesium.Cartesian3.fromDegrees(
                             pathClusterArray[i][visitPointIndex][0] + (node.x - 50) / 100 * perCellWidth,
-                            pathClusterArray[i][visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth + Math.random() * 0.01,
+                            pathClusterArray[i][visitPointIndex][1] + (node.y - 50) / 100 * perCellWidth,
                             pathClusterArray[i][visitPointIndex][2] + Math.random() * 500,
                         );
                         let timr = Cesium.JulianDate.addSeconds(startTime, visitPointIndex, new Cesium.JulianDate());
                         id2property[cnt++].addSample(timr, nodePosition);
                     });
                 }
+
 
             } else {
                 console.log('stop', visitPointIndex)
@@ -210,12 +224,73 @@ function clickStartDemo() {
     map.clock.shouldAnimate = true;
 }
 
+
+// 得到两个节点之间的第一条路径
+function sendRequestPath(start, end) {
+    $.ajax({
+        url: "/test/getShortPath",
+        type: "GET",
+        dataType: "JSON",
+        data: {
+            start: start,
+            end: end
+        },
+        error: function (error) {
+            addInfoShow("路径获取失败");
+        },
+        success(path) {
+            //path = path.map(String);
+            console.log(path);
+            let s1 = (start + '>' + end + ": ")
+            if (path.length > 1) {
+                let str = '';
+
+                str += s1;
+                for (let i = 0; i < path.length; i++) {
+                    if (i > 0) {
+                        str += '->';
+                    }
+                    str += path[i];
+                }
+                str += ("  Hop:" + (path.length - 1));
+                //console.log(str);
+                addInfoShow(str);
+            } else {
+                addInfoShow(s1 + "无路径", 'red')
+            }
+            showCountTransmitTable();
+
+        }
+    });
+}
+
+//停止运行
 function clickStopDemo() {
     map.clock.shouldAnimate = false;
     clearInterval(clock);
     clock = null;
 }
 
+// 随机破坏一个节点
+function randomDestroyNode() {
+    let lenOfCluster1 = nodeClusterList[0].nodeList.length - 1;
+    let index = Math.round(Math.random() * lenOfCluster1);
+    // 为给定 ID 的 user 创建请求
+    axios.get('/test/destroyNode', {
+        params: {
+            index: index
+        }
+    }).then((res) => {
+        addInfoShow("删除节点" + index, "red");
+        console.log(res);
+    }).catch((error) => {
+        console.log('ERROR', error);
+        addInfoShow("删除节点" + index + '失败', "orange");
+    })
+
+}
+
+//将请求的数据显示出来
 function addNetToCesium(data) {
     initAllData();
     nodeClusterList = data;
@@ -269,6 +344,10 @@ function addNetToCesium(data) {
                 },
             });
             models.push(entity);
+            entity.position.setInterpolationOptions({
+                interpolationDegree: 2,
+                interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+            });
         });
     }
 
@@ -276,6 +355,8 @@ function addNetToCesium(data) {
     visitPointIndex++;
 }
 
+
+// 添加每个簇整体的轨迹线
 function addClusterHeadLine(len) {
 
     startTime = viewer.clock.currentTime;
@@ -289,7 +370,7 @@ function addClusterHeadLine(len) {
 
     for (let i = 0; i < len; i++) {
         const property1 = new Cesium.SampledPositionProperty();
-        let point = [center_point[0], center_point[1] + i * 2, center_point[2]]
+        let point = [center_point[0], center_point[1] + i * 0.01, center_point[2] + i * 3000]
         pathClusterArray[i] = [];
         pathClusterArray[i].push(point)
         for (let j = 1; j < numsOfPoints; j++) {
@@ -303,6 +384,12 @@ function addClusterHeadLine(len) {
                 p_point[2],
             );
             property1.addSample(time, p_point_);
+            // const dataPoint = p_point_;
+            // viewer.entities.add({
+            //     description: `Location: (${p_point_[0]}, ${p_point_[1]}, ${p_point_[2]})`,
+            //     position: dataPoint,
+            //     point: { pixelSize: 10, color: Cesium.Color.ORANGE }
+            // });
         }
         clusterHeadPositionProperty.push(property1)
     }
@@ -352,7 +439,7 @@ function addClusterHeadLine(len) {
 }
 
 
-
+// 实时显示某个节点的信息
 function showPosition(entity, p) {
     $('#td_time').html(Cesium.JulianDate.toDate(map.clock.currentTime).format('yyyy-MM-dd hh:mm:ss'))
     if (entity.position) {
@@ -385,7 +472,6 @@ function initTree(arr, nameColum = 'name') {
     let zNodes = []
 
     for (let i = 0; i < nodeClusterList.length; i++) {
-        console.log(models[i][nameColum]);
         let pnode = {
 
             id: models[i][nameColum],
@@ -450,7 +536,7 @@ function treeOverlays_onClick(event, treeId, treeNode) {
     entity.viewFrom = new Cesium.Cartesian3(-2080, -1715, 20000)
 }
 
-
+// 创建websocket与后台交互数据
 function createWebSocket(userSessionID) {
 
     userID = userSessionID;
@@ -475,7 +561,43 @@ function createWebSocket(userSessionID) {
     }
 }
 
+// 显示与隐藏业务统计窗口
+function showCountTranmit() {
+    $("#id_show_count_transmit").toggle();
+}
 
+//更新业务统计数据
+function showCountTransmitTable() {
+    axios.get("/test/getCountTransmit")
+        .then((res) => {
+
+            let data = res.data;
+            let ans_str = '';
+            //console.log(data);
+            let send = data.send;
+            let recv = data.recv;
+            for (let i = 0; i < send.length; i++) {
+                let tr_rate = 0;
+                if (send[i] > 0) {
+                    tr_rate = recv[i] / send[i];
+                }
+                ans_str += '<tr>'
+                    + '<td>节点' + i + '</td>'
+                    + '<td>' + send[i] + '</td>'
+                    + '<td>' + recv[i] + '</td>'
+                    + '<td>' + (tr_rate * 100).toFixed(2) + '%</td>' + '</tr>';
+            }
+            $("#id_show_count_transmit_tbody").html(ans_str);
+            $("#id_td_total_send").text(data.sendSum);
+            $("#id_td_total_recv").text(data.recvSum);
+            $("#id_td_total_rate").text((data.recvSum / data.sendSum * 100).toFixed(2));
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+}
+
+// 从后台得到数据
 function getDataFromServer() {
 
     axios.get('/test/getAllNets').then((res) => {
