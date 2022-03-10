@@ -14,7 +14,6 @@ public class Network {
     private String modifiedTime;
     //抗毁度值 
     private double netValue;
-    //簇首ID
     private int clusterId;
     //被毁坏的结点ID集合
     private HashSet<Integer> destroyedNode = new HashSet<>();
@@ -23,16 +22,16 @@ public class Network {
         return id;
     }
 
+    public List<Node> getNodeList() {
+        return nodeList;
+    }
+
     public int getClusterId() {
         return clusterId;
     }
 
     public void setClusterId(int clusterId) {
         this.clusterId = clusterId;
-    }
-
-    public List<Node> getNodeList() {
-        return nodeList;
     }
 
     public void setNodeList(List<Node> nodeList) {
@@ -57,5 +56,23 @@ public class Network {
 
     public void setNetValue(double netValue) {
         this.netValue = netValue;
+    }
+
+    public HashSet<Integer> getDestroyedNode() {
+        return destroyedNode;
+    }
+
+    public void setDestroyedNode(HashSet<Integer> destroyedNode) {
+        this.destroyedNode = destroyedNode;
+    }
+
+    public boolean destroy(int n_id) {
+        if (n_id < nodeList.size()) {
+            Node node = null;
+            node = nodeList.get(n_id);
+            node.setType((byte) -1);
+        }
+
+        return false;
     }
 }

@@ -278,6 +278,7 @@ function getData(net, id_canvas) {
     let nodes = [];
     let edges = [];
     $("#value_of_net").text(net.netValue.toFixed(3));
+    $("#id_init_cluster_id").text(net.nodeList[net.clusterId].ip);
     cluster_members = net.clusters;
     //console.log(net.nodeList)
     //console.log(con_width)

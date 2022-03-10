@@ -1,6 +1,7 @@
 package com.bupt.demosystem.util;
 
 import com.bupt.demosystem.entity.Network;
+import com.bupt.demosystem.entity.Node;
 import org.springframework.data.relational.core.sql.In;
 
 import java.util.*;
@@ -59,6 +60,81 @@ public class ShortPath {
         return path;
     }
 
+    //bfs模拟结点独立去寻找最短路径
+    public static ArrayList<LinkedList<Integer>> multiPathList(Network network, int from, int to) {
+        ArrayList<LinkedList<Integer>> paths = new ArrayList<>();
+        List<Node> nodes = network.getNodeList();
+        boolean[] vis = new boolean[nodes.size()];
+
+        Queue<Integer> queue = new LinkedList<>();
+        Queue<LinkedList<Integer>> pathQueue = new LinkedList<>();
+        LinkedList<Integer> pathOne = new LinkedList<>();
+        queue.offer(from);
+        pathOne.add(from);
+        pathQueue.offer(pathOne);
+        breakFlage:
+        while (!queue.isEmpty()) {
+            //是否找到路径
+            boolean f = false;
+            int len = queue.size();
+            for (int i = 0; i < len; i++) {
+                int top = queue.poll();
+                vis[top] = true;
+                pathOne = pathQueue.poll();
+                List<Integer> edges = nodes.get(top).getEdges();
+                for (int edge : edges) {
+                    if (!vis[edge] && nodes.get(edge).getType() != -1) {
+                        queue.add(edge);
+                        LinkedList<Integer> pathNow = new LinkedList<>(pathOne);
+                        pathNow.offer(edge);
+                        pathQueue.offer(pathNow);
+                        if (edge == to) {
+                            f = true;
+                            paths.add(pathNow);
+                        }
+                    }
+                }
+
+            }
+            if (f) {
+                break breakFlage;
+            }
+
+        }
+        return paths;
+    }
+
+
+    private static double weight_lengthOfPath = 0.5;
+    private static double weight_valOfPath = 0.5;
+
+    public static ArrayList<LinkedList<Integer>> multiPathListBest(Network network, int from, int to) {
+        ArrayList<LinkedList<Integer>> paths = multiPath(NetUtil.getMapFromNetWork(network), from, to);
+        if (paths.size() < 2) {
+            return paths;
+        }
+        ArrayList<PathSort> pathSorts = new ArrayList<>();
+        paths.forEach(path -> {
+            PathSort ps = new PathSort();
+            double pathVale = 0;
+            List<Node> nodes = network.getNodeList();
+            for (Integer id : path) {
+                pathVale += nodes.get(id).getInvulnerability();
+            }
+
+            pathVale = weight_valOfPath * (pathVale / path.size()) + weight_lengthOfPath * path.size();
+            ps.setPathVale(pathVale);
+            ps.setPath(path);
+            pathSorts.add(ps);
+        });
+        Collections.sort(pathSorts);
+        ArrayList<LinkedList<Integer>> ans = new ArrayList<>();
+        pathSorts.forEach(ps -> {
+            ans.add(ps.getPath());
+        });
+        return paths;
+    }
+
 
     //network得到两点之间的最短路径，并按抗毁值从小到大排序
     public static ArrayList<LinkedList<Integer>> multiPath(Network network, int source, int target) {
@@ -83,10 +159,6 @@ public class ShortPath {
         return paths;
     }
 
-    public ArrayList<LinkedList<Integer>> multiPathList(Network network, int from, int to) {
-        ArrayList<LinkedList<Integer>> paths = new ArrayList<>();
-        return paths;
-    }
 
     //Dijkstra算法 中的多邻接点与多条最短路径问题
     public static ArrayList<LinkedList<Integer>> multiPath(int[][] map, int source, int target) {

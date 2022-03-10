@@ -14,12 +14,12 @@ public class Node {
     private int id;
     private String ip;
     private int capacity;
+    // -1损坏，0是簇首，其他是普通结点
     private int type;
-    private int x;
-    private int y;
-    private int z;
+    private int x, y;
+    private double latitude, longitude, height;
     private double invulnerability;
-    private LinkedList<Integer> edges;
+    private LinkedList<Integer> edges = new LinkedList<>();
 
     public double getInvulnerability() {
         return invulnerability;
@@ -29,10 +29,10 @@ public class Node {
         this.invulnerability = invulnerability;
     }
 
+
     public Node(int id, String ip) {
         this.id = id;
         this.ip = ip;
-        this.edges = new LinkedList<>();
     }
 
     public Node(int id, String ip, int capacity, int type) {
@@ -40,7 +40,6 @@ public class Node {
         this.ip = ip;
         this.capacity = capacity;
         this.type = type;
-        this.edges = new LinkedList<>();
     }
 
     public Node() {
@@ -97,6 +96,14 @@ public class Node {
         this.type = type;
     }
 
+    public LinkedList<Integer> getEdges() {
+        return edges;
+    }
+
+    public void setEdges(LinkedList<Integer> edges) {
+        this.edges = edges;
+    }
+
     public int getX() {
         return x;
     }
@@ -113,19 +120,27 @@ public class Node {
         this.y = y;
     }
 
-    public int getZ() {
-        return z;
+    public double getLatitude() {
+        return latitude;
     }
 
-    public void setZ(int z) {
-        this.z = z;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
     }
 
-    public List<Integer> getEdges() {
-        return edges;
+    public double getLongitude() {
+        return longitude;
     }
 
-    public void setEdges(LinkedList<Integer> edges) {
-        this.edges = edges;
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
     }
 }

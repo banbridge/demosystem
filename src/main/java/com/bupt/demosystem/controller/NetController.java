@@ -105,8 +105,9 @@ public class NetController {
     @RequestMapping(value = {"/getShortPath"})
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(netInfo.getSelectNetIndex(), start, end);
-        logger.info("getShortPath");
+        ArrayList<LinkedList<Integer>> path = ShortPath.multiPathList(netInfo.getSelectNetIndex(), start, end);
+
+        logger.info("getShortPath path.size:" + path.size());
         return path;
     }
 
@@ -115,7 +116,7 @@ public class NetController {
     @RequestMapping(value = {"/getShortPathIndex0"})
     @ResponseBody
     public ArrayList getShortPathIndex0(int start, int end) {
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPath(netInfo.getNet(), start, end);
+        ArrayList<LinkedList<Integer>> path = ShortPath.multiPathListBest(netInfo.getNet(), start, end);
         logger.info("getShortPath");
         return path;
     }
@@ -181,7 +182,6 @@ public class NetController {
     public Network loadNewNet(int id) {
         logger.info("loadNewNet:" + id);
         Network net = null;
-
         try {
             net = netService.getNetwork(id);
             netInfo.setSelectNet(net);

@@ -42,24 +42,18 @@ public class NetCreateService {
         Random random = new Random();
         Network net = new Network();
         net.setId(-1);
-        List<Node> nodes = new ArrayList<>();
-        int cap, type;
+        List<Node> nodes = new ArrayList<>(n + 10);
+        int cap;
         for (int i = 0; i < n; i++) {
             Node node = new Node();
             cap = 20 + random.nextInt(50);
 
             node.setX(5 + random.nextInt(90));
             node.setY(5 + random.nextInt(90));
-
-            type = random.nextInt(SIZE_OF_TYPE);
-            if (i < 3) {
-                type = 1;
-            }
             node.setId(i);
             node.setCapacity(cap);
-            node.setType(type);
+            node.setType(i > 0 ? 1 : 0);
             node.setIp(ipBase + i);
-
             nodes.add(node);
         }
 
@@ -100,7 +94,6 @@ public class NetCreateService {
         }
         net.setNetValue(-netVal);
         net.setNodeList(nodes);
-        net.setClusterId(0);
         logger.info("生成成功，规模为:" + n + " " + net.getNetValue());
         return net;
     }
