@@ -1,10 +1,11 @@
 package com.bupt.demosystem.controller;
 
 import com.bupt.demosystem.entity.Network;
+import com.bupt.demosystem.service.NetClusterService;
 import com.bupt.demosystem.service.NetCreateService;
 import com.bupt.demosystem.service.NetService;
-import com.bupt.demosystem.util.NetInfo;
-import com.bupt.demosystem.util.ShortPath;
+import com.bupt.demosystem.entity.Cluster;
+import com.bupt.demosystem.util.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -25,17 +25,17 @@ public class NetController {
     final
     NetCreateService netCreateService;
     final
-    NetService netService;
+    NetClusterService netService;
     final
-    NetInfo netInfo;
+    Group group1;
 
 
     private final Logger logger = LoggerFactory.getLogger(NetController.class);
 
-    public NetController(NetCreateService netCreateService, NetService netService, NetInfo netInfo) {
+    public NetController(NetCreateService netCreateService, NetClusterService netService, Group group) {
         this.netCreateService = netCreateService;
         this.netService = netService;
-        this.netInfo = netInfo;
+        this.group1 = group;
 
     }
 
@@ -68,36 +68,38 @@ public class NetController {
      */
     @RequestMapping("/getNewNet")
     @ResponseBody
-    public Network getNewNet(Integer num_node) {
+    public Cluster getNewNet(Integer num_node) {
         if (num_node == null) {
             num_node = 20;
         }
-        System.out.println(num_node);
-        Network net = netCreateService.getNetwork(num_node);
-        netInfo.setSelectNet(net);
+
+        ArrayList<Network> net = netCreateService.getNetworkList(num_node);
+        Cluster cls = new Cluster();
+        cls.setCluster(net);
+        group1.setSelectNet(cls);
         logger.info("getNewNet");
-        return netInfo.getSelectNetIndex();
+        return group1.getSelectNetIndex();
     }
 
     @RequestMapping("getNetList")
     @ResponseBody
-    public List<Network> getNetList() {
-        return netInfo.getAllNet();
+    public ArrayList<Cluster> getNetList() {
+        return group1.getAllNet();
     }
 
     @RequestMapping("getNetListSize")
     @ResponseBody
     public int getNetListSize() {
-        netInfo.setSelectIndex(0);
+        group1.setSelectIndex(0);
         logger.info("getNetListSize");
-        return netInfo.getAllNet().size();
+        return group1.getAllNet().size();
     }
 
     @RequestMapping("/getNetByIndex")
     @ResponseBody
-    public Network getNetByIndex(Integer index) {
+    public Cluster getNetByIndex(Integer index) {
         logger.info("请求的index：" + index);
-        return netInfo.getNetByIndex(index);
+        return group1.getNetByIndex(index);
     }
 
 
@@ -105,10 +107,10 @@ public class NetController {
     @RequestMapping(value = {"/getShortPath"})
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPathList(netInfo.getSelectNetIndex(), start, end);
+        // ArrayList<LinkedList<Integer>> path = ShortPath.multiPathList(netInfo.getSelectNetIndex(), start, end);
 
-        logger.info("getShortPath path.size:" + path.size());
-        return path;
+        //logger.info("getShortPath path.size:" + path.size());
+        return null;
     }
 
 
@@ -116,17 +118,17 @@ public class NetController {
     @RequestMapping(value = {"/getShortPathIndex0"})
     @ResponseBody
     public ArrayList getShortPathIndex0(int start, int end) {
-        ArrayList<LinkedList<Integer>> path = ShortPath.multiPathListBest(netInfo.getNet(), start, end);
+        //ArrayList<LinkedList<Integer>> path = ShortPath.multiPathListBest(netInfo.getNet(), start, end);
         logger.info("getShortPath");
-        return path;
+        return null;
     }
 
     //从数据库加载网络
     @GetMapping(value = "/netWorkList")
-    public String networkList(@RequestParam(value = "pageNumber", defaultValue = "1") String pageNumber,
-                              @RequestParam(value = "pageSize", defaultValue = "10") String pageSize,
+    public String networkList(@RequestParam(value = "pageNumber", defaultValue = "1") Integer pageNumber,
+                              @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
                               ModelMap modelMap) {
-        List<Network> networks = netService.getPageNetwork(Integer.valueOf(pageNumber), Integer.valueOf(pageSize));
+        List<Cluster> networks = netService.getPageCluster(pageNumber, pageSize);
         int total_pages = 1;
         int total_networks = 0;
         if (networks.size() > 0) {
@@ -155,14 +157,14 @@ public class NetController {
     @ResponseBody
     public boolean saveNet() {
         logger.info("saveNet");
-        Network net = netInfo.getSelectNetIndex();
-        Network netResult = null;
+        Cluster net = group1.getSelectNetIndex();
+        Cluster netResult = null;
         logger.info("net value:" + net.getNetValue());
         try {
             if (net.getId() == -1) {
-                netResult = netService.saveNetwork(net);
+                netResult = netService.saveCluster(net);
             } else {
-                netResult = netService.updateNetWork(net);
+                netResult = netService.updateCluster(net);
             }
             if (netResult == null) {
                 return false;
@@ -179,19 +181,19 @@ public class NetController {
     // 将服务端更新成客户端加载的网络
     @RequestMapping(value = "loadNewNet")
     @ResponseBody
-    public Network loadNewNet(int id) {
+    public Cluster loadNewNet(int id) {
         logger.info("loadNewNet:" + id);
-        Network net = null;
+        Cluster net = null;
         try {
-            net = netService.getNetwork(id);
-            netInfo.setSelectNet(net);
+            net = netService.getCluster(id);
+            group1.setSelectNet(net);
         } catch (Exception e) {
             System.out.println("出现异常！！！！！！");
             e.printStackTrace();
             return null;
         }
 
-        return netInfo.getSelectNetIndex();
+        return group1.getSelectNetIndex();
     }
 
 }

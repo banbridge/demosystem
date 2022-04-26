@@ -19,5 +19,4 @@ public class ScheduleTaskConfig {
         return threadPoolTaskScheduler;
     }
 
-
 }

@@ -3,9 +3,8 @@ package com.bupt.demosystem.controller;
 import com.bupt.demosystem.entity.Network;
 import com.bupt.demosystem.service.NetCreateService;
 import com.bupt.demosystem.util.CountTransmit;
+import com.bupt.demosystem.util.Group;
 import com.bupt.demosystem.util.NetInfo;
-import com.bupt.demosystem.util.NetUtil;
-import com.bupt.demosystem.util.ShortPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,23 +14,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 
 /**
  * @Author banbridge
- * @Classname TestController
- * @Date 2021/12/19 14:35
+ * @Classname GroupController
+ * @Date 2022/4/26 12:03
  */
+
 @RestController
-@RequestMapping("/test")
-public class TestController {
+@RequestMapping("/group")
+public class GroupController {
 
     public final SimpMessagingTemplate simpMessagingTemplate;
 
     public final NetCreateService netCreateService;
 
-    public final NetInfo netInfo;
+    public final Group group;
 
     public final ThreadPoolTaskScheduler threadPoolTaskScheduler;
 
@@ -39,16 +39,15 @@ public class TestController {
 
     private ScheduledFuture<?> futureTask;
 
-    public TestController(SimpMessagingTemplate simpMessagingTemplate,
-                          NetCreateService netCreateService,
-                          NetInfo netInfo,
-                          ThreadPoolTaskScheduler threadPoolTaskScheduler) {
+    public GroupController(SimpMessagingTemplate simpMessagingTemplate,
+                           NetCreateService netCreateService,
+                           Group group,
+                           ThreadPoolTaskScheduler threadPoolTaskScheduler) {
         this.simpMessagingTemplate = simpMessagingTemplate;
         this.netCreateService = netCreateService;
-        this.netInfo = netInfo;
+        this.group = group;
         this.threadPoolTaskScheduler = threadPoolTaskScheduler;
     }
-
 
     @RequestMapping(value = "")
     public ModelAndView test() {
@@ -59,8 +58,8 @@ public class TestController {
     }
 
     public void initCountMap() {
-        netInfo.setPathData(null);
-        netInfo.initNetInfo();
+        group.setPathData(null);
+        group.initNetInfo();
         if (futureTask != null) {
             futureTask.cancel(true);
         }
@@ -68,15 +67,14 @@ public class TestController {
 
     @GetMapping("getAllNets")
     public List<Network> getNetList() {
-        return netInfo.getAllNet();
+        return group.getAllNetWork();
     }
 
     @RequestMapping("destroyNode")
     public boolean destroyNode(Integer c_id, Integer n_id) {
 
         logger.info("delete Node : " + n_id);
-
-        return netInfo.destroyNode(c_id, n_id);
+        return group.destroyNode(c_id, n_id);
     }
 
     //得到多条最短路径，
@@ -87,15 +85,14 @@ public class TestController {
         int c_i2 = end / 100;
         int n_i1 = start % 100;
         int n_i2 = end % 100;
-        return netInfo.getPath(c_i1, n_i1, c_i2, n_i2);
+        return group.getPath(c_i1, n_i1, c_i2, n_i2);
     }
 
     //得到各个节点的业务传输成功情况
     @RequestMapping("/getCountTransmit")
     public List<CountTransmit> getCountTransmit() {
-        return netInfo.getCountTransmit();
+        return group.getCountTransmit();
     }
-
 
     @RequestMapping("/startNodeRun")
     public boolean startNodeRun() {
@@ -103,8 +100,8 @@ public class TestController {
         try {
             futureTask =
                     threadPoolTaskScheduler.scheduleAtFixedRate(() -> {
-                        boolean isMove = netInfo.moveNodeCluster();
-                        simpMessagingTemplate.convertAndSend("/all/greeting", netInfo.getAllNet());
+                        boolean isMove = group.moveNodeCluster();
+                        simpMessagingTemplate.convertAndSend("/all/greeting", group.getAllNetWork());
                         if (!isMove && futureTask != null) {
                             futureTask.cancel(true);
                         }
@@ -127,8 +124,6 @@ public class TestController {
         }
         return false;
     }
-
-
 
 
 }

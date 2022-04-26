@@ -68,8 +68,7 @@ public class Network {
 
     public boolean destroy(int n_id) {
         if (n_id < nodeList.size()) {
-            Node node = null;
-            node = nodeList.get(n_id);
+            Node node = nodeList.get(n_id);
             node.setType((byte) -1);
         }
 

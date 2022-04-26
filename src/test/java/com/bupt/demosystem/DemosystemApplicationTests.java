@@ -1,8 +1,10 @@
 package com.bupt.demosystem;
 
+import com.bupt.demosystem.config.SettingConfig;
 import com.bupt.demosystem.util.DRTD;
 import com.bupt.demosystem.util.ShortPath;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
@@ -69,6 +71,14 @@ class DemosystemApplicationTests {
         }
         long endTime = System.currentTimeMillis();
         System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
+    }
+
+    @Autowired
+    SettingConfig settingConfig;
+
+    @Test
+    void test3() {
+        System.out.println(settingConfig.getTest());
     }
 
 }

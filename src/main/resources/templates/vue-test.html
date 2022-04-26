@@ -5,7 +5,7 @@
     <meta charset="UTF-8"/>
     <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Document</title>
+    <title>三维动态演示</title>
 
 
     <link rel="stylesheet" type="text/css" th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
@@ -40,6 +40,10 @@
         <input class="btn btn-primary" id="btnStart" type="button" onclick="clickStartDemo()" value="开始"/>
         <input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>
         <input class="btn btn-primary" id="btnCancelTrack" type="button" onclick="clickCancelTrack()" value="取消跟踪"/>
+
+        <input class="btn" type="checkbox" id="id_switch_path" value="yes"/>
+        <label class="form-check-label" for="id_switch_path">路径</label>
+
         <table class="mars-table tb-border">
             <tr>
                 <td class="nametd">时间：</td>
@@ -68,6 +72,34 @@
 
                 <td class="nametd">成功率：
                     <strong id="id_td_total_rate">00.00</strong>%
+                </td>
+
+            </tr>
+            <tr>
+                <td class="nametd">簇内总发送：
+                    <strong id="id_td_total_send_cunei">0</strong>
+                </td>
+
+                <td class="nametd">总接收：
+                    <strong id="id_td_total_recv_cunei">0</strong>
+                </td>
+
+                <td class="nametd">成功率：
+                    <strong id="id_td_total_rate_cunei">00.00</strong>%
+                </td>
+
+            </tr>
+            <tr>
+                <td class="nametd">簇间总发送：
+                    <strong id="id_td_total_send_cujian">0</strong>
+                </td>
+
+                <td class="nametd">总接收：
+                    <strong id="id_td_total_recv_cujian">0</strong>
+                </td>
+
+                <td class="nametd">成功率：
+                    <strong id="id_td_total_rate_cujian">00.00</strong>%
                 </td>
 
             </tr>

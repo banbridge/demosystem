@@ -1,5 +1,6 @@
 package com.bupt.demosystem.util;
 
+import com.bupt.demosystem.entity.Cluster;
 import com.bupt.demosystem.entity.Network;
 import com.bupt.demosystem.entity.Node;
 import com.bupt.demosystem.service.NetCreateService;
@@ -8,32 +9,38 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 /**
- * Created by Banbridge on 2021/2/21.
- * 操作所有群的消息
+ * @Author banbridge
+ * @Classname Group
+ * @Date 2022/4/26 10:09
  */
+
 @Service
-public class NetInfo {
+public class Group {
 
     private final int SIZEOFNET = 3;
 
     private int selectIndex;
 
-    //三个簇的路径索引
+    //三个群的路径索引
     private int[] clusterPathIndex;
+    String ipBase = "192.168.";
 
 
     private ArrayList<ArrayList<double[]>> pathData;
 
     private List<CountTransmit> countTransmit;
+    private Map<Integer, Network> clusterToGroup;
 
 
     //簇的存储
-    private ArrayList<Network> nets;
+    private ArrayList<Cluster> groups;
+    private ArrayList<Network> allNets;
 
-    String ipBase = "192.168.";
 
-    public NetInfo() {
-        nets = new ArrayList<>(5);
+    public Group() {
+        groups = new ArrayList<>(5);
+        clusterToGroup = new HashMap<>();
+        allNets = new ArrayList<>();
         initNetInfo();
     }
 
@@ -43,34 +50,46 @@ public class NetInfo {
     public void initNetInfo() {
         selectIndex = 0;
 
-        if (nets.size() < 1) {
+        if (groups.size() < 1) {
+
             NetCreateService netCreateService = new NetCreateService();
-            Network net1 = netCreateService.getNetwork(24, ipBase + "0.", 1);
-            nets.add(net1);
-            Network net2 = netCreateService.getNetwork(24, ipBase + "1.", 2);
-            nets.add(net2);
-            Network net3 = netCreateService.getNetwork(15, ipBase + "2.", 3);
-            nets.add(net3);
-        }
-        clusterPathIndex = new int[nets.size()];
-        getPathData();
-        for (int i = 0; i < nets.size(); i++) {
-            List<Node> nodes = nets.get(i).getNodeList();
-            double[] poi = pathData.get(i).get(clusterPathIndex[i]);
-            for (Node node : nodes) {
-                node.setLatitude(poi[1] + (node.getX() - 50) * 1.0 / 100 * 0.09);
-                node.setLongitude(poi[0] + (node.getY() - 50) * 1.0 / 100 * 0.09);
-                node.setHeight(poi[2]);
-                node.setType(1);
+            int[] nodeSize = {24, 24, 80};
+            for (int i = 1; i <= 3; i++) {
+                ArrayList<Network> nets = netCreateService.getNetworkList(nodeSize[i], ipBase + i + ".", i);
+                Cluster cls = new Cluster();
+                cls.setCluster(nets);
+                groups.add(cls);
             }
-            nodes.get(0).setType(0);
+            updateClusterToGroup();
+
+//            Network net1 = netCreateService.getNetwork(24, ipBase + "0.", 1);
+//            nets.add(net1);
+//            Network net2 = netCreateService.getNetwork(24, ipBase + "1.", 2);
+//            nets.add(net2);
+//            Network net3 = netCreateService.getNetwork(20, ipBase + "2.", 3);
+//            nets.add(net3);
+        }
+        clusterPathIndex = new int[groups.size()];
+        getPathData();
+        for (int i = 0; i < groups.size(); i++) {
+            for (Network network : groups.get(i).getCluster()) {
+                List<Node> nodes = network.getNodeList();
+                double[] poi = pathData.get(i).get(clusterPathIndex[i]);
+                for (Node node : nodes) {
+                    node.setLatitude(poi[1] + (node.getX() - 50) * 1.0 / 100 * 0.09);
+                    node.setLongitude(poi[0] + (node.getY() - 50) * 1.0 / 100 * 0.09);
+                    node.setHeight(poi[2]);
+                    node.setType(1);
+                }
+                nodes.get(0).setType(0);
+            }
+
             clusterPathIndex[i]++;
         }
         countTransmit = new ArrayList<>();
-        countTransmit.add(new CountTransmit(nets));
-        countTransmit.add(new CountTransmit(nets));
-        countTransmit.add(new CountTransmit(nets));
-
+        for (int i = 0; i < allNets.size(); i++) {
+            countTransmit.add(new CountTransmit(allNets));
+        }
     }
 
     /**
@@ -78,25 +97,41 @@ public class NetInfo {
      *
      * @return
      */
-    public Network getNet() {
-        return nets.get(0);
+    public Cluster getNet() {
+        return groups.get(0);
     }
 
     public void setSelectIndex(int index) {
         selectIndex = index;
     }
 
-    public Network getSelectNetIndex() {
-        return nets.get(selectIndex);
+    public Cluster getSelectNetIndex() {
+        return groups.get(selectIndex);
     }
 
-    public void setSelectNet(Network net) {
-        for (Node node : net.getNodeList()) {
-            node.setIp(String.format("%s%d.%d", ipBase, selectIndex + 1, node.getId()));
+    public void setSelectNet(Cluster cls) {
+        for (Network network : cls.getCluster()) {
+            for (Node node : network.getNodeList()) {
+                node.setIp(String.format("%s%d.%d", ipBase, selectIndex + 1, node.getId()));
+            }
         }
-
-        nets.set(selectIndex, net);
+        updateClusterToGroup();
+        groups.set(selectIndex, cls);
     }
+
+    private void updateClusterToGroup() {
+        clusterToGroup.clear();
+        allNets.clear();
+        int cnt = 0;
+        for (int i = 0; i < groups.size(); i++) {
+            Cluster nets = groups.get(i);
+            for (Network net : nets.getCluster()) {
+                clusterToGroup.put(cnt++, net);
+                allNets.add(net);
+            }
+        }
+    }
+
 
     public List<CountTransmit> getCountTransmit() {
         return countTransmit;
@@ -111,11 +146,11 @@ public class NetInfo {
      *
      * @return
      */
-    public List<Network> getAllNet() {
-        if (nets.size() < 1) {
+    public ArrayList<Cluster> getAllNet() {
+        if (groups.size() < 1) {
             initNetInfo();
         }
-        return nets;
+        return groups;
     }
 
     /**
@@ -124,10 +159,10 @@ public class NetInfo {
      * @param index
      * @return
      */
-    public Network getNetByIndex(Integer index) {
-        if (index < nets.size()) {
+    public Cluster getNetByIndex(Integer index) {
+        if (index < groups.size()) {
             selectIndex = index;
-            return nets.get(index);
+            return groups.get(index);
         }
         return null;
     }
@@ -139,10 +174,13 @@ public class NetInfo {
      * @param n_id
      */
     public boolean destroyNode(int c_id, int n_id) {
-        if (c_id < nets.size()) {
-            Network net = nets.get(c_id);
+
+        if (c_id < clusterToGroup.size()) {
+            Network net = clusterToGroup.get(c_id);
             return net.destroy(n_id);
+
         }
+
         return false;
     }
 
@@ -158,31 +196,34 @@ public class NetInfo {
 
             return false;
         }
-        for (int i = 0; i < nets.size(); i++) {
+        for (int i = 0; i < groups.size(); i++) {
             if (clusterPathIndex[i] >= pathData.get(i).size()) {
                 continue;
             }
-            Network net = nets.get(i);
-            List<Node> nodeList = net.getNodeList();
-            double[] location = pathData.get(i).get(clusterPathIndex[i]);
-            double[] pre_location = pathData.get(i).get(clusterPathIndex[i] - 1);
-            double lat, lon, hei;
-            for (Node node : nodeList) {
-                if (node.getType() != -1) {
-                    lon = node.getLongitude() + location[0] - pre_location[0] + (Math.random() - 0.5) * 0.002;
-                    lat = node.getLatitude() + location[1] - pre_location[1] + (Math.random() - 0.5) * 0.002;
-                    hei = node.getHeight() + location[2] - pre_location[2] + (Math.random() - 0.5) * 100;
-                    node.setLatitude(lat);
-                    node.setLongitude(lon);
-                    node.setHeight(hei);
-                    if (nodeList.get(net.getClusterId()).getType() == -1 || nodeList.get(net.getClusterId()).getEdges().size() < node.getEdges().size()) {
-                        net.setClusterId(node.getId());
-                    }
-                    node.setType(i + 2);
-                }
 
+            ArrayList<Network> networks = groups.get(i).getCluster();
+            for (Network net : networks) {
+                List<Node> nodeList = net.getNodeList();
+                double[] location = pathData.get(i).get(clusterPathIndex[i]);
+                double[] pre_location = pathData.get(i).get(clusterPathIndex[i] - 1);
+                double lat, lon, hei;
+                for (Node node : nodeList) {
+                    if (node.getType() != -1) {
+                        lon = node.getLongitude() + location[0] - pre_location[0] + (Math.random() - 0.5) * 0.002;
+                        lat = node.getLatitude() + location[1] - pre_location[1] + (Math.random() - 0.5) * 0.002;
+                        hei = node.getHeight() + location[2] - pre_location[2] + (Math.random() - 0.5) * 100;
+                        node.setLatitude(lat);
+                        node.setLongitude(lon);
+                        node.setHeight(hei);
+                        if (nodeList.get(net.getClusterId()).getType() == -1 || nodeList.get(net.getClusterId()).getEdges().size() < node.getEdges().size()) {
+                            net.setClusterId(node.getId());
+                        }
+                        node.setType(i + 2);
+                    }
+
+                }
+                net.getNodeList().get(net.getClusterId()).setType(0);
             }
-            net.getNodeList().get(net.getClusterId()).setType(0);
             clusterPathIndex[i]++;
         }
         return true;
@@ -203,7 +244,7 @@ public class NetInfo {
      * @param pathData
      */
     public void setPathData(ArrayList<ArrayList<double[]>> pathData) {
-        int len = nets.size();
+        int len = groups.size();
         int[] flyTime = {95, 90, 200};
         int totalSeconds = 0;
         for (int i = 0; i < flyTime.length; i++) {
@@ -259,11 +300,11 @@ public class NetInfo {
         int index = c_i1 == c_i2 ? 1 : 2;
         countTransmit.get(index).increaseSend(c_i1, n_i1);
         List<String> ans = new LinkedList<>();
-        if (c_i1 >= nets.size() || c_i2 >= nets.size()) {
+        if (c_i1 >= allNets.size() || c_i2 >= allNets.size()) {
             return null;
         }
-        Network net1 = nets.get(c_i1);
-        Network net2 = nets.get(c_i2);
+        Network net1 = allNets.get(c_i1);
+        Network net2 = allNets.get(c_i2);
         if (n_i1 >= net1.getNodeList().size() || n_i2 >= net2.getNodeList().size()) {
             return null;
         }
@@ -318,7 +359,7 @@ public class NetInfo {
         return ans;
     }
 
-
+    public List<Network> getAllNetWork() {
+        return allNets;
+    }
 }
-
-

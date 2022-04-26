@@ -283,25 +283,28 @@ function getData(net, id_canvas) {
     //console.log(net.nodeList)
     //console.log(con_width)
     //console.log(con_height)
-
-    net.nodeList.forEach(function (node) {
-        nodes.push({
-            id: node.id + "",
-            label: node.ip,
-            class: node.type + "",
-            x: node.x / 100 * con_width,
-            y: node.y / 100 * con_height,
-            cap: node.capacity,
-            invulnerability: node.invulnerability,
-            cluster: node.cluster
-        })
-        node.edges.forEach((to) => {
-            edges.push({
-                source: node.id + "",
-                target: to + "",
+    let len = 0;
+    net.cluster.forEach((network) => {
+        network.nodeList.forEach(function (node) {
+            nodes.push({
+                id: node.id + "",
+                label: node.ip,
+                class: node.type + "",
+                x: node.x / 100 * con_width,
+                y: node.y / 100 * con_height,
+                cap: node.capacity,
+                invulnerability: node.invulnerability,
+                cluster: node.cluster
+            })
+            node.edges.forEach((to) => {
+                edges.push({
+                    source: node.id + "",
+                    target: to + "",
+                })
             })
         })
     })
+
     $("#num_node").val(nodes.length + "");
     //console.log(nodes);
 
