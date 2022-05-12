@@ -1,3 +1,6 @@
 spring:
   profiles:
     active: dev
+
+setting:
+  test: 200

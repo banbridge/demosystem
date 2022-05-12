@@ -25,7 +25,7 @@
                 <a th:class="${index}==2?'nav-link active':'text-light  nav-link' " href="#">功能扩展</a>
             </li>
             <li class="nav-item flex-fill ">
-                <a th:class="${index}==3?'nav-link active':'text-light  nav-link' " href="/test">模拟运行</a>
+                <a th:class="${index}==3?'nav-link active':'text-light  nav-link' " href="/group">模拟运行</a>
             </li>
         </ul>
     </nav>
@@ -61,7 +61,7 @@
                     </thead>
                     <tbody>
                     <tr th:each="network : ${networks}">
-                        <td th:text="${network.nodeList.size()}"></td>
+                        <td th:text="${network.size}"></td>
                         <td th:text="${network.modifiedTime}"></td>
                         <td th:text="${network.netValue}"></td>
                         <td>

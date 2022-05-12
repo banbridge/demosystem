@@ -6,6 +6,7 @@ import com.bupt.demosystem.service.NetCreateService;
 import com.bupt.demosystem.service.NetService;
 import com.bupt.demosystem.entity.Cluster;
 import com.bupt.demosystem.util.Group;
+import com.bupt.demosystem.util.ShortPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -99,7 +101,9 @@ public class NetController {
     @ResponseBody
     public Cluster getNetByIndex(Integer index) {
         logger.info("请求的index：" + index);
-        return group1.getNetByIndex(index);
+        Cluster cls = group1.getNetByIndex(index);
+        logger.info("请求的群簇的个数：" + cls.getCluster().size());
+        return cls;
     }
 
 
@@ -107,10 +111,11 @@ public class NetController {
     @RequestMapping(value = {"/getShortPath"})
     @ResponseBody
     public ArrayList getShortPath(int start, int end) {
-        // ArrayList<LinkedList<Integer>> path = ShortPath.multiPathList(netInfo.getSelectNetIndex(), start, end);
-
+        //ArrayList<LinkedList<Integer>> path = ShortPath.multiPathList(netInfo.getSelectNetIndex(), start, end);
+        logger.info("getShortPath path.size:" + start + " " + end);
+        ArrayList<LinkedList<Integer>> path = group1.getPath(start, end);
         //logger.info("getShortPath path.size:" + path.size());
-        return null;
+        return path;
     }
 
 

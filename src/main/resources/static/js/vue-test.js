@@ -9,35 +9,42 @@ let wsCreateHandler = null;
 
 let map = null;
 let viewer = null;
-let models;
+
 let graphicLayer = null;
 let center_point = [119.75, 26.38, 1000];
 let start_point1 = [120, 29, 1000];
 
 let id2property;
+let models;
+let ids;
+let id2Node;
+let netsList;
 
 let startTime;
 let endTime;
 
 let pathClusterArray = null;
-let nodeClusterList = null;
+
 
 let clock = null;
 
 
-let nodeColors = [Cesium.Color.fromCssColorString("#657785"),
+let nodeColors = [Cesium.Color.fromCssColorString("#ffffff"),
     Cesium.Color.fromCssColorString("#e60515"),
     Cesium.Color.fromCssColorString("rgba(28,89,202,0.64)"),
     Cesium.Color.fromCssColorString("rgb(99,221,93,0.64)"),
     Cesium.Color.fromCssColorString("rgb(226,213,53,0.64)"),
-    Cesium.Color.fromCssColorString("rgba(191,106,22,0.57)")]
+    Cesium.Color.fromCssColorString("rgba(191,106,22,0.57)"),
+    Cesium.Color.fromCssColorString("rgb(8,100,105)")]
 
 function initAllData() {
     //pathClusterArray = new Map();
     viewer.entities.removeAll();
-    nodeClusterList = null;
+    id2Node = new Map();
     id2property = new Map();
     models = new Map();
+    ids = [];
+    netsList = null;
 }
 
 createWebSocket("cesium");
@@ -112,9 +119,8 @@ function mapInit() {
     // 清除默认的第一个影像 bing地图影像
     viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
 
-    let layer_net = new Cesium.MapboxStyleImageryProvider({
-        styleId: 'satellite-v9',
-        accessToken: 'pk.eyJ1IjoiYmFuYnJpZGdlIiwiYSI6ImNrbm9jbWZwODEyeWkyd3FqeWlrMjBpNDkifQ.IKOlC_ndL5W8Lpa_XAVmJA'
+    let layer_net = new Cesium.ArcGisMapServerImageryProvider({
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
     });
     //离线图层
     let layer_lixian = new Cesium.UrlTemplateImageryProvider({
@@ -205,7 +211,7 @@ function clickCancelTrack() {
 
 // 模拟节点下一个运行位置，并开始运行
 function clickStartDemo() {
-    axios.get("/test/startNodeRun")
+    axios.get("/group/startNodeRun")
         .then((res) => {
             console.log(res);
         })
@@ -214,17 +220,13 @@ function clickStartDemo() {
         })
     if (clock == null) {
         clock = setInterval(() => {
-            let len = nodeClusterList.length;
+            let len = ids.length;
             let c_i1 = Math.floor(Math.random() * len);
             let c_i2 = Math.floor(Math.random() * len);
-            let lenOfCluster1 = nodeClusterList[c_i1].nodeList.length;
-            let lenOfCluster2 = nodeClusterList[c_i2].nodeList.length;
-            ;
-            let start = Math.floor(Math.random() * lenOfCluster1);
-            let end = Math.floor(Math.random() * lenOfCluster2);
-            start = c_i1 * 100 + start;
-            end += c_i2 * 100;
-            if (start != end) {
+
+            let start = ids[c_i1];
+            let end = ids[c_i2];
+            if (start !== end) {
                 sendRequestPath(start, end);
             }
 
@@ -238,7 +240,7 @@ function clickStartDemo() {
 // 得到两个节点之间的QOS最好的路径
 function sendRequestPath(start, end) {
     $.ajax({
-        url: "/test/getShortPath",
+        url: "/group/getShortPath",
         type: "GET",
         dataType: "JSON",
         data: {
@@ -246,20 +248,19 @@ function sendRequestPath(start, end) {
             end: end
         },
         error: function (error) {
-            addInfoShow(getIdFromNum(start) + '>' + getIdFromNum(end) + ": 路径获取失败", "blue");
+            addInfoShow(getIPFromID(start) + '>' + getIPFromID(end) + ": 路径获取失败", "blue");
         },
         success(path) {
             //path = path.map(String);
             //console.log(path);
-            let s1 = getColorSpane(getIdFromNum(start) + '>' + getIdFromNum(end) + ": ", 'rgba(10,230,14,0.83)')
+            let s1 = getColorSpane(getIPFromID(start) + '>' + getIPFromID(end) + ": <br/>", 'rgba(10,230,14,0.83)')
             if (path.length > 1) {
                 let str = '';
-
                 for (let i = 0; i < path.length; i++) {
                     if (i > 0) {
                         str += '->';
                     }
-                    str += path[i];
+                    str += getIPFromID(path[i]);
                 }
                 str += ("  Hop:" + (path.length - 1));
                 //console.log(str);
@@ -278,7 +279,7 @@ function clickStopDemo() {
     map.clock.shouldAnimate = false;
     clearInterval(clock);
     clock = null;
-    axios.get("/test/endNodeRun")
+    axios.get("/group/endNodeRun")
         .then((res) => {
             console.log(res);
         })
@@ -289,15 +290,14 @@ function clickStopDemo() {
 
 // 随机破坏一个节点
 function randomDestroyNode() {
-    let c_id = parseInt(Math.random() * (nodeClusterList.length));
-    let lenOfCluster1 = nodeClusterList[0].nodeList.length - 1;
-    let n_id = parseInt(Math.random() * (lenOfCluster1 - 1));
-    let index = getIdFromC_N(c_id, n_id);
+    let len = ids.length;
+    let c_id = Math.floor(Math.random() * len);
+
+    let index = ids[c_id];
     // 为给定 ID 的 user 创建请求
-    axios.get('/test/destroyNode', {
+    axios.get('/group/destroyNode', {
         params: {
-            c_id: c_id,
-            n_id: n_id
+            n_id: index
         }
     }).then((res) => {
         addInfoShow("删除节点" + index, "red");
@@ -312,12 +312,14 @@ function randomDestroyNode() {
 //将请求的数据显示出来
 function addNetToCesium(data) {
     initAllData();
-    nodeClusterList = data;
-    console.log(nodeClusterList.length)
+
+    console.log(data.length)
     addClusterHeadLine(data.length);
+    netsList = data;
     for (let i = 0; i < data.length; i++) {
         //console.log(data[i]);
         data[i].nodeList.forEach((node) => {
+            //console.log(node.type);
             let nodePositionProperty = new Cesium.SampledPositionProperty();
             let nodePosition = Cesium.Cartesian3.fromDegrees(
                 node.longitude,
@@ -326,7 +328,7 @@ function addNetToCesium(data) {
             );
             nodePositionProperty.addSample(startTime, nodePosition);
 
-            let index = getIdFromC_N(i, node.id)
+            let index = node.id;
             id2property[index] = nodePositionProperty;
             let entity = viewer.entities.add({
                 id: index,
@@ -337,24 +339,18 @@ function addNetToCesium(data) {
                 position: nodePositionProperty,
                 point: {
                     pixelSize: 12,
-                    color: nodeColors[node.type % 4 + 2],
-                    scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.8),
+                    color: nodeColors[node.type % 5 + 1],
+                    scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 1.0),
                 },
                 label: {
                     text: "节点：" + index,
                     font: '16px Helvetica',
                     style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                    fillColor: Cesium.Color.SKYBLUE,
+                    fillColor: Cesium.Color.WHITE,
                     outlineColor: Cesium.Color.BLACK,
                     outlineWidth: 1,
                     verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                     pixelOffset: new Cesium.Cartesian2(0, -19),
-                    translucencyByDistance: new Cesium.NearFarScalar(
-                        1.5e2,
-                        0.9,
-                        3e5,
-                        0.2
-                    ),
                     scaleByDistance: new Cesium.NearFarScalar(1.5e2, 1.0, 3e6, 0.8),
                 },
                 path: {
@@ -367,6 +363,8 @@ function addNetToCesium(data) {
                 },
             });
             models[index] = entity;
+            ids.push(index);
+            id2Node[index] = node;
             entity.position.setInterpolationOptions({
                 interpolationDegree: 2,
                 interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
@@ -375,7 +373,6 @@ function addNetToCesium(data) {
     }
 
     initTree(models, 'id');
-
 
 }
 
@@ -390,11 +387,13 @@ function addClusterHeadLine(len) {
     viewer.clock.shouldAnimate = false;
 
     let clusterHeadPositionProperty = [];
-
+    console.log(len);
+    len = pathClusterArray.length;
     for (let i = 0; i < len; i++) {
         const property1 = new Cesium.SampledPositionProperty();
+        let len_path = pathClusterArray[i].length;
 
-        for (let j = 0; j < pathClusterArray[i].length; j++) {
+        for (let j = 0; j < len_path; j++) {
             let time = Cesium.JulianDate.addSeconds(startTime, j, new Cesium.JulianDate());
             let p_point = pathClusterArray[i][j];
             let p_point_ = Cesium.Cartesian3.fromDegrees(
@@ -433,7 +432,7 @@ function addClusterHeadLine(len) {
             interpolationDegree: 2,
             interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
         });
-        models[i + ""] = ch1;
+        // models["ch"+i] = ch1;
     }
     //initTree(models, 'id');
 
@@ -446,7 +445,7 @@ function updateNodeInfo(message) {
     for (let i = 0; i < message.length; i++) {
         message[i].nodeList.forEach((node) => {
             //console.log(node);
-            let index = getIdFromC_N(i, node.id);
+            let index = node.id;
             let nodePosition = Cesium.Cartesian3.fromDegrees(
                 node.longitude,
                 node.latitude,
@@ -454,10 +453,10 @@ function updateNodeInfo(message) {
             );
             let timr = Cesium.JulianDate.addSeconds(now, 1, new Cesium.JulianDate());
             id2property[index].addSample(timr, nodePosition);
-            let cesium_id = getIdFromC_N(i, node.id);
+            let cesium_id = node.id;
             let entity = viewer.entities.getById(cesium_id);
             //console.log(entity);
-            if (node.type == -1) {
+            if (node.type === -1) {
                 entity._point._color._value = nodeColors[node.type + 1];
             }
             let isShowPath = document.getElementById('id_switch_path');
@@ -467,13 +466,10 @@ function updateNodeInfo(message) {
     }
 }
 
-function getIdFromNum(id) {
-    return getIdFromC_N(parseInt(id / 100), id % 100);
+function getIPFromID(id) {
+    return id2Node[id].ip;
 }
 
-function getIdFromC_N(i, id) {
-    return i + "_" + id;
-}
 
 // 实时显示某个节点的信息
 function showPosition(entity, p) {
@@ -507,11 +503,10 @@ function initTree(arr, nameColum = 'name') {
 
     let zNodes = []
 
-    for (let i = 0; i < nodeClusterList.length; i++) {
+    for (let i = 0; i < netsList.length; i++) {
         let pnode = {
-
-            id: i,
-            name: models[i][nameColum],
+            id: "c" + i,
+            name: "簇" + i,
             type: 'group',
             open: false,
             checked: true,
@@ -520,16 +515,17 @@ function initTree(arr, nameColum = 'name') {
         zNodes.push(pnode)
     }
 
-    for (let i = 0; i < nodeClusterList.length; i++) {
-        for (let j = 0; j < nodeClusterList[i].nodeList.length; j++) {
-            let id = i + '_' + j;
-            let item = arr[id]
-            let name = item[nameColum] || '未命名'
+    for (let i = 0; i < netsList.length; i++) {
+        let nodes = netsList[i].nodeList;
+        //console.log(nodes);
+        for (let j = 0; j < nodes.length; j++) {
+            let id = nodes[j].id;
+            let name = nodes[j].ip;
             //let chId = models[name.split('_')[0]][nameColum];
 
             let node = {
                 id: id,
-                pId: i,
+                pId: "c" + i,
                 name: name,
                 checked: true,
                 icon: 'icons/layer1.png',
@@ -537,9 +533,10 @@ function initTree(arr, nameColum = 'name') {
             zNodes.push(node);
         }
 
+
         //layersObj[i] = item._entity;
     }
-
+    //console.log(zNodes);
     $.fn.zTree.destroy()
     $.fn.zTree.init($('#treeOverlays'), setting, zNodes)
 }
@@ -605,65 +602,66 @@ function showCountTranmit() {
     $("#id_show_count_transmit").toggle();
 }
 
+function showSettingTable() {
+    $("#id_setting").toggle();
+}
+
 //更新业务统计数据
 function showCountTransmitTable() {
-    axios.get("/test/getCountTransmit")
+    axios.get("/group/getCountTransmit")
         .then((res) => {
 
-            let data = res.data[0];
+            let data = res.data;
             let ans_str = '';
-            //console.log(data);
-            let send = data.send;
-            let recv = data.recv;
-            let sendNode = data.sendNode;
-            let recvNode = data.recvNode;
-            for (let i = 0; i < sendNode.length; i++) {
-                let tr_rate = 0;
-                for (let j = 0; j < sendNode[i].length; j++) {
-                    tr_rate = 0;
-                    if (sendNode[i][j] > 0) {
-                        tr_rate = recvNode[i][j] / sendNode[i][j];
-                    }
-                    ans_str += '<tr>'
-                        + '<td>节点' + i + '_' + j + '</td>'
-                        + '<td>' + sendNode[i][j] + '</td>'
-                        + '<td>' + recvNode[i][j] + '</td>'
-                        + '<td>' + (tr_rate * 100).toFixed(2) + '%</td>' + '</tr>';
+
+            let sendSum = data.sendSum;
+            let recvSum = data.recvSum;
+            let sendNode = data.send;
+            let recvNode = data.recv;
+            let tr_rate = 0;
+            //console.log(sendNode);
+            for (let id in sendNode) {
+                // console.log(id);
+                //console.log(sendNode[id]);
+                let sendCount = sendNode[id];
+                let recvCount = recvNode[id];
+                if (recvCount === null) {
+                    recvCount = 0;
                 }
                 tr_rate = 0;
-                if (send[i] > 0) {
-                    tr_rate = recv[i] / send[i];
+                if (sendCount > 0) {
+                    tr_rate = recvCount / sendCount;
                 }
                 ans_str += '<tr>'
-                    + '<td>簇' + i + '</td>'
-                    + '<td>' + send[i] + '</td>'
-                    + '<td>' + recv[i] + '</td>'
+                    + '<td>节点' + getIPFromID(id) + '</td>'
+                    + '<td>' + sendCount + '</td>'
+                    + '<td>' + recvCount + '</td>'
                     + '<td>' + (tr_rate * 100).toFixed(2) + '%</td>' + '</tr>';
-
             }
+
             $("#id_show_count_transmit_tbody").html(ans_str);
 
-            $("#id_td_total_send").text(data.sendSum);
-            $("#id_td_total_recv").text(data.recvSum);
+            $("#id_td_total_send").text(sendSum[0]);
+            $("#id_td_total_recv").text(recvSum[0]);
             let a = 0;
-            if (data.sendSum > 0) {
-                a = data.recvSum / data.sendSum * 100;
+            if (sendSum[0] > 0) {
+                a = recvSum[0] / sendSum[0] * 100;
             }
             $("#id_td_total_rate").text((a).toFixed(2));
 
-            $("#id_td_total_send_cunei").text(res.data[1].sendSum);
-            $("#id_td_total_recv_cunei").text(res.data[1].recvSum);
+            $("#id_td_total_send_cunei").text(sendSum[1]);
+            $("#id_td_total_recv_cunei").text(recvSum[1]);
             a = 0;
-            if (res.data[1].sendSum > 0) {
-                a = res.data[1].recvSum / res.data[1].sendSum * 100;
+            if (sendSum[1] > 0) {
+                a = recvSum[1] / sendSum[1] * 100;
             }
             $("#id_td_total_rate_cunei").text((a).toFixed(2));
 
-            $("#id_td_total_send_cujian").text(res.data[2].sendSum);
-            $("#id_td_total_recv_cujian").text(res.data[2].recvSum);
+            $("#id_td_total_send_cujian").text(sendSum[2]);
+            $("#id_td_total_recv_cujian").text(recvSum[2]);
             a = 0;
-            if (res.data[2].sendSum > 0) {
-                a = res.data[2].recvSum / res.data[2].sendSum * 100;
+            if (sendSum[2] > 0) {
+                a = recvSum[2] / sendSum[2] * 100;
             }
             $("#id_td_total_rate_cujian").text((a).toFixed(2));
         })
@@ -675,15 +673,14 @@ function showCountTransmitTable() {
 // 从后台得到数据
 function getDataFromServer() {
 
-    axios.all([axios.get('/test/getAllNets'), axios.get('/api/getClusterPathList')])
+    axios.all([axios.get('/group/getAllNets'), axios.get('/group/getClusterPathList')])
         .then(axios.spread((res1, res2) => {
             pathClusterArray = res2.data;
             addNetToCesium(res1.data);
         })).catch((error) => {
         console.log('ERROR', error);
     })
-    viewer.flyTo(models);
-
+    viewer.zoomTo(viewer.entities);
 }
 
 
@@ -710,12 +707,13 @@ function onWsOpen(evt) {
 
 
 function onWsMessage(message) {
-    message = JSON.parse(message);
-    if (message.stop) {
+    //console.log("---------" + message);
+    if (message === "stop") {
         clickStopDemo();
         return;
     }
-    console.log("---------" + message.stop);
+    message = JSON.parse(message);
+
     updateNodeInfo(message);
     //writeToInfo(message);
 }
@@ -748,7 +746,3 @@ function reconnect() {
     }, n * 1000);
 }
 
-
-function getRndInteger(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
-}

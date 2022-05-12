@@ -64,14 +64,26 @@ public class ShortPath {
     public static ArrayList<LinkedList<Integer>> multiPathList(Network network, int from, int to) {
         ArrayList<LinkedList<Integer>> paths = new ArrayList<>();
         List<Node> nodes = network.getNodeList();
-        boolean[] vis = new boolean[nodes.size()];
+        HashMap<Integer, Integer> map = new HashMap<>();
+        //int []index = new int[nodes.size()];
+        for (int i = 0; i < nodes.size(); i++) {
+            int id = nodes.get(i).getId();
+            //index[i] = id;
+            map.put(id, i);
 
+        }
+
+        boolean[] vis = new boolean[nodes.size()];
         Queue<Integer> queue = new LinkedList<>();
         Queue<LinkedList<Integer>> pathQueue = new LinkedList<>();
         LinkedList<Integer> pathOne = new LinkedList<>();
         queue.offer(from);
         pathOne.add(from);
         pathQueue.offer(pathOne);
+        if (from == to) {
+            paths.add(pathOne);
+            return paths;
+        }
         breakFlage:
         while (!queue.isEmpty()) {
             //是否找到路径
@@ -79,11 +91,13 @@ public class ShortPath {
             int len = queue.size();
             for (int i = 0; i < len; i++) {
                 int top = queue.poll();
-                vis[top] = true;
+                int topIndex = map.get(top);
+                vis[topIndex] = true;
                 pathOne = pathQueue.poll();
-                List<Integer> edges = nodes.get(top).getEdges();
+                List<Integer> edges = nodes.get(topIndex).getEdges();
                 for (int edge : edges) {
-                    if (!vis[edge] && nodes.get(edge).getType() != -1) {
+                    int nodeIndex = map.get(edge);
+                    if (!vis[nodeIndex] && nodes.get(nodeIndex).getType() != -1) {
                         queue.add(edge);
                         LinkedList<Integer> pathNow = new LinkedList<>(pathOne);
                         pathNow.offer(edge);
@@ -99,8 +113,8 @@ public class ShortPath {
             if (f) {
                 break breakFlage;
             }
-
         }
+
         return paths;
     }
 
@@ -109,6 +123,7 @@ public class ShortPath {
     private static double weight_valOfPath = 0.5;
 
     public static ArrayList<LinkedList<Integer>> multiPathListBest(Network network, int from, int to) {
+
         ArrayList<LinkedList<Integer>> paths = multiPath(NetUtil.getMapFromNetWork(network), from, to);
         if (paths.size() < 2) {
             return paths;

@@ -1,10 +1,8 @@
 package com.bupt.demosystem.service;
 
-import com.bupt.demosystem.entity.Edge;
 import com.bupt.demosystem.entity.Network;
 import com.bupt.demosystem.entity.Node;
 import com.bupt.demosystem.util.DRTD;
-import com.bupt.demosystem.util.NetInfo;
 import com.bupt.demosystem.util.NetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +35,10 @@ public class NetCreateService {
     }
 
     public ArrayList<Network> getNetworkList(int n, String ipBase, int type) {
-        id = 0;
+
         int parts = n / MAXNODECOUNT;
-        int rest = n % parts;
-        if (parts == 0 || rest > MAXNODECOUNT / 2) {
+        int rest = n % MAXNODECOUNT;
+        if (parts == 0 || rest >= MAXNODECOUNT / 2) {
             parts++;
         }
         int[] perNodes = new int[parts];
@@ -74,27 +72,26 @@ public class NetCreateService {
             node.setX(5 + random.nextInt(90));
             node.setY(5 + random.nextInt(90));
             node.setId(id++);
+            if (id == Integer.MAX_VALUE - 10) {
+                id = 0;
+            }
             node.setCapacity(cap);
-            node.setType(i > 0 ? type : 0);
             node.setIp(ipBase + i);
             nodes.add(node);
         }
 
+        //logger.info("-----"+parts);
         int cellWidth = 100 / width;
         int cellHeight = 100 / height;
         for (Node node : nodes) {
             int c = node.getX() / cellWidth;
             int r = node.getY() / cellHeight;
-            clusters.get(c * width + r).getNodeList().add(node);
+            int part = c * width + r;
+            clusters.get(part).getNodeList().add(node);
         }
 
-        System.out.println("-------------------------");
-        System.out.println(clusters.size());
         for (Network cluster : clusters) {
-            System.out.println(cluster.getNodeList().size());
-            Network clusetrNetwork = getNetwork(cluster);
-            clusters.add(clusetrNetwork);
-            System.out.println(clusetrNetwork == null);
+            getNetwork(cluster);
         }
         return clusters;
     }
@@ -103,8 +100,10 @@ public class NetCreateService {
 
         List<Node> nodes = net.getNodeList();
         int n = nodes.size();
+        int[] index = new int[n];
         int[][] cost = new int[n][n];
         for (int i = 0; i < n; i++) {
+            index[i] = nodes.get(i).getId();
             for (int j = i; j < n; j++) {
                 cost[j][i] = cost[i][j] = i == j ? 0 :
                         (int) Math.sqrt(Math.pow(nodes.get(i).getX() - nodes.get(j).getX(), 2)
@@ -133,13 +132,14 @@ public class NetCreateService {
             node.setInvulnerability(nodeVal);
             for (int j = i + 1; j < n; j++) {
                 if (map[i][j] == 1) {
-                    node.addEdge(j);
-                    nodes.get(j).addEdge(i);
+                    node.addEdge(index[j]);
+                    nodes.get(j).addEdge(index[i]);
                 }
             }
         }
         net.setNetValue(-netVal);
         net.setNodeList(nodes);
+        net.setClusterId(nodes.get(0).getId());
         logger.info("生成成功，规模为:" + n + " " + net.getNetValue());
         return net;
     }

@@ -8,9 +8,11 @@
     <title>三维动态演示</title>
 
 
-    <link rel="stylesheet" type="text/css" th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
+    <link href="webjars/bootstrap/4.5.3/css/bootstrap.min.css" rel="stylesheet" type="text/css"
+          th:href="@{webjars/bootstrap/css/bootstrap.min.css}"/>
     <link href="webjars/zTree/3.5.37/css/zTreeStyle/zTreeStyle.css" rel="stylesheet" type="text/css"
           th:href="@{webjars/zTree/css/zTreeStyle/zTreeStyle.css}"/>
+
     <link href="/static/lib/Cesium/Widgets/widgets.css" rel="stylesheet" type="text/css"
           th:href="@{lib/Cesium/Widgets/widgets.css}"/>
     <link href="/static/lib/mars3d/mars3d.css" rel="stylesheet" type="text/css" th:href="@{lib/mars3d/mars3d.css}"/>
@@ -38,11 +40,13 @@
     <div class="infoview" style="overflow:auto;left:5px;right:auto; top:10px;max-height:40%;">
         <input class="btn btn-primary" id="btnStop" onclick="clickStopDemo()" type="button" value="停止"/>
         <input class="btn btn-primary" id="btnStart" type="button" onclick="clickStartDemo()" value="开始"/>
-        <input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>
+        <!--<input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>-->
         <input class="btn btn-primary" id="btnCancelTrack" type="button" onclick="clickCancelTrack()" value="取消跟踪"/>
-
+        <input class="btn btn-primary" id="btnSetting" onclick="showSettingTable()" type="button" value="配置">
+        </input>
         <input class="btn" type="checkbox" id="id_switch_path" value="yes"/>
         <label class="form-check-label" for="id_switch_path">路径</label>
+
 
         <table class="mars-table tb-border">
             <tr>
@@ -76,7 +80,7 @@
 
             </tr>
             <tr>
-                <td class="nametd">簇内总发送：
+                <td class="nametd">簇内统计：
                     <strong id="id_td_total_send_cunei">0</strong>
                 </td>
 
@@ -90,7 +94,7 @@
 
             </tr>
             <tr>
-                <td class="nametd">簇间总发送：
+                <td class="nametd">簇间统计：
                     <strong id="id_td_total_send_cujian">0</strong>
                 </td>
 
@@ -130,6 +134,11 @@
 
         </table>
 
+
+    </div>
+
+    <div class="infoview" id="id_setting"
+         style="overflow:auto; left:30%;right:auto; top:15%;max-height:40%;  display: none">
 
     </div>
 

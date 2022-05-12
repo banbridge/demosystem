@@ -1,4 +1,4 @@
-let colorls = ["#f1ddce", "#d9e7d1", "#0eaae6"];
+let colorls = ["#eb0717", "#d9e7d1", "#0eaae6"];
 let types = ["A类子网节点", "B类子网节点", "C类子网节点"];
 let cluster_colors = ['lightgreen', 'lightblue', 'rgba(117,132,161,0.19)'];
 let clusters = [];
@@ -81,7 +81,7 @@ function findShortPath() {
                 if (sourceInPathIdx === -1 || targetInPathIdx === -1) return;
 
                 if (Math.abs(sourceInPathIdx - targetInPathIdx) === 1) {
-                    graph.setItemState(edge, (cnt === path.length - 1) ? 'click' : 'highlight', true);
+                    graph.setItemState(edge, (cnt === path.length - 1) ? 'highlight' : 'click', true);
                 } else {
                     graph.setItemState(edge, 'inactive', true);
                 }
@@ -277,14 +277,17 @@ function getData(net, id_canvas) {
     let con_height = container.clientHeight;
     let nodes = [];
     let edges = [];
+    let clusterNodeId = [];
     $("#value_of_net").text(net.netValue.toFixed(3));
-    $("#id_init_cluster_id").text(net.nodeList[net.clusterId].ip);
+
+    //$("#id_init_cluster_id").text(net.cluster.nodeList[net.cluster[0].clusterId].ip);
     cluster_members = net.clusters;
     //console.log(net.nodeList)
     //console.log(con_width)
     //console.log(con_height)
     let len = 0;
     net.cluster.forEach((network) => {
+        clusterNodeId.push(network.clusterId);
         network.nodeList.forEach(function (node) {
             nodes.push({
                 id: node.id + "",
@@ -304,7 +307,14 @@ function getData(net, id_canvas) {
             })
         })
     })
-
+    for (let i = 0; i < clusterNodeId.length - 1; i++) {
+        for (let j = i + 1; j < clusterNodeId.length; j++) {
+            edges.push({
+                source: clusterNodeId[i] + "",
+                target: clusterNodeId[j] + "",
+            })
+        }
+    }
     $("#num_node").val(nodes.length + "");
     //console.log(nodes);
 

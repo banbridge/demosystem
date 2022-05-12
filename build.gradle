@@ -20,20 +20,23 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc:2.5.4'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:2.5.4'
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.5.4'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket:2.5.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc:2.6.7'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:2.6.7'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.6.7'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket:2.6.7'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-configuration-processor
+    implementation group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: '2.6.7'
+
     implementation 'org.springframework.boot:spring-boot-devtools'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.4'
-    runtimeOnly 'mysql:mysql-connector-java:8.0.25'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.6.7'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.29'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.7'
     // https://mvnrepository.com/artifact/org.webjars/webjars-locator
     implementation group: 'org.webjars', name: 'webjars-locator', version: '0.40'
     // https://mvnrepository.com/artifact/org.webjars/bootstrap
     implementation group: 'org.webjars', name: 'bootstrap', version: '4.5.3'
     // https://mvnrepository.com/artifact/org.webjars.bower/jquery
-    implementation group: 'org.webjars.bower', name: 'jquery', version: '3.5.1'
+    implementation group: 'org.webjars', name: 'jquery', version: '3.5.1'
     // https://mvnrepository.com/artifact/org.webjars.npm/axios
     implementation group: 'org.webjars.npm', name: 'axios', version: '0.21.1'
     // https://mvnrepository.com/artifact/org.webjars/stomp-websocket
@@ -44,6 +47,8 @@ dependencies {
     implementation group: 'org.webjars.bower', name: 'echarts', version: '5.1.1'
     // https://mvnrepository.com/artifact/org.webjars/zTree
     implementation group: 'org.webjars', name: 'zTree', version: '3.5.37'
+    // https://mvnrepository.com/artifact/com.alibaba/easyexcel
+    implementation group: 'com.alibaba', name: 'easyexcel', version: '3.0.5'
 
 }
 

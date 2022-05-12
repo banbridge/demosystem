@@ -1,6 +1,5 @@
 package com.bupt.demosystem;
 
-import com.bupt.demosystem.config.SettingConfig;
 import com.bupt.demosystem.util.DRTD;
 import com.bupt.demosystem.util.ShortPath;
 import org.junit.jupiter.api.Test;
@@ -73,12 +72,6 @@ class DemosystemApplicationTests {
         System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
     }
 
-    @Autowired
-    SettingConfig settingConfig;
 
-    @Test
-    void test3() {
-        System.out.println(settingConfig.getTest());
-    }
 
 }

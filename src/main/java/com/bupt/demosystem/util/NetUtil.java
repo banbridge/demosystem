@@ -1,6 +1,5 @@
 package com.bupt.demosystem.util;
 
-import com.bupt.demosystem.entity.Edge;
 import com.bupt.demosystem.entity.Network;
 import com.bupt.demosystem.entity.Node;
 

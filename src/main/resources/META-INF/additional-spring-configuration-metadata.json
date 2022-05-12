@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "setting.test",
+      "type": "java.lang.String",
+      "description": "Description for setting.test."
+    }
+  ]
+}

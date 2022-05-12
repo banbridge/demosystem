@@ -17,6 +17,7 @@ public class Cluster {
     private int id;
     private String modifiedTime;
     private double netValue;
+    private int size;
 
     public Cluster() {
         id = ID++;
@@ -52,5 +53,13 @@ public class Cluster {
 
     public void setNetValue(double netValue) {
         this.netValue = netValue;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
     }
 }
