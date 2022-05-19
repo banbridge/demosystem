@@ -14,11 +14,19 @@ let graphicLayer = null;
 let center_point = [119.75, 26.38, 1000];
 let start_point1 = [120, 29, 1000];
 
+//节点id转化为随时间的离散点
 let id2property;
+//节点id到cesium model的映射
 let models;
+//所有的节点id，随机得到一个节点时用到
 let ids;
+//id转化为后端传来的node信息
 let id2Node;
+//所有的分簇信息
 let netsList;
+//群的配置信息
+let settingConfig;
+
 
 let startTime;
 let endTime;
@@ -45,10 +53,8 @@ function initAllData() {
     models = new Map();
     ids = [];
     netsList = null;
+    initSetting();
 }
-
-createWebSocket("cesium");
-
 Date.prototype.format = function (fmt) {
     let o = {
         "M+": this.getMonth() + 1, //月份
@@ -82,9 +88,10 @@ Date.prototype.format = function (fmt) {
     }
     return fmt;
 };
-
+createWebSocket("cesium");
 mapInit();
 getDataFromServer();
+
 
 //将路由信息显示
 function addInfoShow(str, color = '') {
@@ -119,9 +126,15 @@ function mapInit() {
     // 清除默认的第一个影像 bing地图影像
     viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
 
-    let layer_net = new Cesium.ArcGisMapServerImageryProvider({
-        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-    });
+    let layer_net = new Cesium.WebMapTileServiceImageryProvider({
+        url:
+            "https://t0.tianditu.gov.cn/ibo_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=ibo&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=8b207a527da69c7a32f636801fa194d4",
+        layer: "tiandituImg",
+        style: "default",
+        format: "image/jpeg",
+        tileMatrixSetID: "tiandituImg",
+        maximumLevel: 16
+    })
     //离线图层
     let layer_lixian = new Cesium.UrlTemplateImageryProvider({
         url: "http://127.0.0.1:8089/{z}/{x}/{y}.png",
@@ -180,7 +193,7 @@ function mapInit() {
             defaultContextMenu: true,
             mouseDownView: false,
             compass: {
-                top: "10px",
+                bottom: "100px",
                 right: "5px"
             },
             distanceLegend: {
@@ -196,10 +209,28 @@ function mapInit() {
         },
 
     });
+
     graphicLayer = new mars3d.layer.GraphicLayer();
     map.addLayer(graphicLayer);
     map.clock.shouldAnimate = false;
 
+}
+
+function btnSubmitSettings() {
+    if (!updateSettingConfig()) {
+        return;
+    }
+    let sett = settingConfig;
+    axios.post('/group/updateSetting', sett
+    ).then((res) => {
+        settingConfig = res.data;
+        showSettingConfig(settingConfig, $("#id_setting_net_index").val());
+        getDataFromServer();
+
+        alert("修改配置成功")
+    }).catch((error) => {
+        alert("修改配置失败" + error)
+    })
 }
 
 
@@ -208,11 +239,12 @@ function clickCancelTrack() {
     viewer.trackedEntity = null;
 }
 
-
 // 模拟节点下一个运行位置，并开始运行
 function clickStartDemo() {
     axios.get("/group/startNodeRun")
         .then((res) => {
+            //getDataFromServer();
+            map.clock.shouldAnimate = true;
             console.log(res);
         })
         .catch((error) => {
@@ -232,8 +264,23 @@ function clickStartDemo() {
 
         }, 500);
     }
-    map.clock.shouldAnimate = true;
 
+
+}
+
+
+//停止运行
+function clickStopDemo() {
+    map.clock.shouldAnimate = false;
+    clearInterval(clock);
+    clock = null;
+    axios.get("/group/endNodeRun")
+        .then((res) => {
+            console.log(res);
+        })
+        .catch((error) => {
+            console.log('ERROR', error);
+        })
 }
 
 
@@ -274,37 +321,24 @@ function sendRequestPath(start, end) {
     });
 }
 
-//停止运行
-function clickStopDemo() {
-    map.clock.shouldAnimate = false;
-    clearInterval(clock);
-    clock = null;
-    axios.get("/group/endNodeRun")
-        .then((res) => {
-            console.log(res);
-        })
-        .catch((error) => {
-            console.log('ERROR', error);
-        })
-}
-
 // 随机破坏一个节点
 function randomDestroyNode() {
-    let len = ids.length;
-    let c_id = Math.floor(Math.random() * len);
-
-    let index = ids[c_id];
     // 为给定 ID 的 user 创建请求
     axios.get('/group/destroyNode', {
         params: {
-            n_id: index
+            n_id: 1
         }
     }).then((res) => {
-        addInfoShow("删除节点" + index, "red");
+        let index = res.data;
+        if (index === -1) {
+            addInfoShow("随机故障节点失败", "orange");
+        } else {
+            addInfoShow("故障节点" + index, "red");
+        }
         console.log(res);
     }).catch((error) => {
         console.log('ERROR', error);
-        addInfoShow("删除节点" + index + '失败', "orange");
+        addInfoShow("随机故障节点失败", "orange");
     })
 
 }
@@ -312,7 +346,6 @@ function randomDestroyNode() {
 //将请求的数据显示出来
 function addNetToCesium(data) {
     initAllData();
-
     console.log(data.length)
     addClusterHeadLine(data.length);
     netsList = data;
@@ -381,7 +414,7 @@ function addNetToCesium(data) {
 function addClusterHeadLine(len) {
 
     startTime = viewer.clock.currentTime;
-    let totalSeconds = 2000;
+    let totalSeconds = 20000;
     endTime = Cesium.JulianDate.addSeconds(startTime, totalSeconds, new Cesium.JulianDate());
     viewer.clock.stopTime = endTime.clone();
     viewer.clock.shouldAnimate = false;
@@ -390,6 +423,7 @@ function addClusterHeadLine(len) {
     console.log(len);
     len = pathClusterArray.length;
     for (let i = 0; i < len; i++) {
+
         const property1 = new Cesium.SampledPositionProperty();
         let len_path = pathClusterArray[i].length;
 
@@ -468,6 +502,104 @@ function updateNodeInfo(message) {
 
 function getIPFromID(id) {
     return id2Node[id].ip;
+}
+
+
+function showSettingConfig(setting, index) {
+    $("#id_total_fangzhen").text(setting.numOfBadNode);
+    $("#id_setting_spped").val(setting.speed);
+    $("#id_setting_endPos").val(setting.endPos);
+    $("#id_setting_destroyRate").val(setting.destroyRate);
+    $("#id_setting_startPos").val(setting.startPos.slice(index * 3, index * 3 + 3));
+    $("#id_setting_flyTime").val(setting.flyTime[index]);
+    $("#id_setting_maxHeight").val(setting.maxHeight[index]);
+    $("#id_td_end_position").text(setting.endPos);
+}
+
+// 显示与隐藏业务统计窗口
+function showCountTranmit() {
+    $("#id_show_count_transmit").toggle();
+}
+
+function showSettingTable() {
+    $("#id_setting").toggle();
+}
+
+//更新业务统计数据
+function showCountTransmitTable() {
+    axios.get("/group/getCountTransmit")
+        .then((res) => {
+
+            let data = res.data;
+            let ans_str = '';
+
+            let sendSum = data.sendSum;
+            let recvSum = data.recvSum;
+            let sendNode = data.send;
+            let recvNode = data.recv;
+            let tr_rate = 0;
+            //console.log(sendNode);
+            for (let id in sendNode) {
+                // console.log(id);
+                //console.log(sendNode[id]);
+                let sendCount = sendNode[id];
+                let recvCount = recvNode[id];
+                if (recvCount === null) {
+                    recvCount = 0;
+                }
+                tr_rate = 0;
+                if (sendCount > 0) {
+                    tr_rate = recvCount / sendCount;
+                }
+                ans_str += '<tr>'
+                    + '<td>节点' + getIPFromID(id) + '</td>'
+                    + '<td>' + sendCount + '</td>'
+                    + '<td>' + recvCount + '</td>'
+                    + '<td>' + (tr_rate * 100).toFixed(2) + '%</td>' + '</tr>';
+            }
+
+            $("#id_show_count_transmit_tbody").html(ans_str);
+
+            $("#id_td_total_send").text(sendSum[0]);
+            $("#id_td_total_recv").text(recvSum[0]);
+            let a = 0;
+            if (sendSum[0] > 0) {
+                a = recvSum[0] / sendSum[0] * 100;
+            }
+            $("#id_td_total_rate").text((a).toFixed(2));
+
+            $("#id_td_total_send_cunei").text(sendSum[1]);
+            $("#id_td_total_recv_cunei").text(recvSum[1]);
+            a = 0;
+            if (sendSum[1] > 0) {
+                a = recvSum[1] / sendSum[1] * 100;
+            }
+            $("#id_td_total_rate_cunei").text((a).toFixed(2));
+
+            $("#id_td_total_send_cujian").text(sendSum[2]);
+            $("#id_td_total_recv_cujian").text(recvSum[2]);
+            a = 0;
+            if (sendSum[2] > 0) {
+                a = recvSum[2] / sendSum[2] * 100;
+            }
+            $("#id_td_total_rate_cujian").text((a).toFixed(2));
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+}
+
+// 从后台得到数据
+function getDataFromServer() {
+    addInfoShow("初始化成功");
+    axios.all([axios.get('/group/getAllNets'), axios.get('/group/getClusterPathList')])
+        .then(axios.spread((res1, res2) => {
+            pathClusterArray = res2.data;
+            addNetToCesium(res1.data);
+        })).catch((error) => {
+        console.log('ERROR', error);
+    })
+    viewer.zoomTo(viewer.entities);
 }
 
 
@@ -597,91 +729,6 @@ function createWebSocket(userSessionID) {
     }
 }
 
-// 显示与隐藏业务统计窗口
-function showCountTranmit() {
-    $("#id_show_count_transmit").toggle();
-}
-
-function showSettingTable() {
-    $("#id_setting").toggle();
-}
-
-//更新业务统计数据
-function showCountTransmitTable() {
-    axios.get("/group/getCountTransmit")
-        .then((res) => {
-
-            let data = res.data;
-            let ans_str = '';
-
-            let sendSum = data.sendSum;
-            let recvSum = data.recvSum;
-            let sendNode = data.send;
-            let recvNode = data.recv;
-            let tr_rate = 0;
-            //console.log(sendNode);
-            for (let id in sendNode) {
-                // console.log(id);
-                //console.log(sendNode[id]);
-                let sendCount = sendNode[id];
-                let recvCount = recvNode[id];
-                if (recvCount === null) {
-                    recvCount = 0;
-                }
-                tr_rate = 0;
-                if (sendCount > 0) {
-                    tr_rate = recvCount / sendCount;
-                }
-                ans_str += '<tr>'
-                    + '<td>节点' + getIPFromID(id) + '</td>'
-                    + '<td>' + sendCount + '</td>'
-                    + '<td>' + recvCount + '</td>'
-                    + '<td>' + (tr_rate * 100).toFixed(2) + '%</td>' + '</tr>';
-            }
-
-            $("#id_show_count_transmit_tbody").html(ans_str);
-
-            $("#id_td_total_send").text(sendSum[0]);
-            $("#id_td_total_recv").text(recvSum[0]);
-            let a = 0;
-            if (sendSum[0] > 0) {
-                a = recvSum[0] / sendSum[0] * 100;
-            }
-            $("#id_td_total_rate").text((a).toFixed(2));
-
-            $("#id_td_total_send_cunei").text(sendSum[1]);
-            $("#id_td_total_recv_cunei").text(recvSum[1]);
-            a = 0;
-            if (sendSum[1] > 0) {
-                a = recvSum[1] / sendSum[1] * 100;
-            }
-            $("#id_td_total_rate_cunei").text((a).toFixed(2));
-
-            $("#id_td_total_send_cujian").text(sendSum[2]);
-            $("#id_td_total_recv_cujian").text(recvSum[2]);
-            a = 0;
-            if (sendSum[2] > 0) {
-                a = recvSum[2] / sendSum[2] * 100;
-            }
-            $("#id_td_total_rate_cujian").text((a).toFixed(2));
-        })
-        .catch((err) => {
-            console.log(err);
-        })
-}
-
-// 从后台得到数据
-function getDataFromServer() {
-
-    axios.all([axios.get('/group/getAllNets'), axios.get('/group/getClusterPathList')])
-        .then(axios.spread((res1, res2) => {
-            pathClusterArray = res2.data;
-            addNetToCesium(res1.data);
-        })).catch((error) => {
-        console.log('ERROR', error);
-    })
-    viewer.zoomTo(viewer.entities);
-}
 
 
 window.onunload = function () {
@@ -712,8 +759,13 @@ function onWsMessage(message) {
         clickStopDemo();
         return;
     }
+    if (message.indexOf("init") === 0) {
+        let ds = message.split(",");
+        $("#id_xuhao_fangzhen").text(ds[1]);
+        //getDataFromServer();
+        return;
+    }
     message = JSON.parse(message);
-
     updateNodeInfo(message);
     //writeToInfo(message);
 }
@@ -744,5 +796,100 @@ function reconnect() {
         createWebSocket();
         lockReconnect = false;
     }, n * 1000);
+}
+
+
+function initSetting() {
+
+    axios.get("/group/getSetting")
+        .then((res) => {
+            settingConfig = res.data;
+            showSettingConfig(settingConfig, 0);
+            $('#id_setting_net_index').find('option').remove();
+            for (let i = 0; i < settingConfig.flyTime.length; i++) {
+                $('#id_setting_net_index').append('<option value="' + i + '">' + ("net" + i) + '</option>')
+            }
+        })
+        .catch((error) => {
+            alert(error + "请求失败");
+        })
+
+}
+
+
+function updateSettingConfig() {
+    let speed = $("#id_setting_spped").val();
+    if (speed < 1) {
+        alert("运行倍速不正确(1-50)");
+        return false;
+    }
+    let destroyRate = $("#id_setting_destroyRate").val();
+    if (destroyRate < 0 || destroyRate > 100) {
+        alert("故障比例不正确(0-100),0代表无故障节点，其他数字代表从1开始破坏相应比例节点数量进行重复仿真");
+        return false;
+    }
+    let endPos = splitPos($("#id_setting_endPos").val(), ",，");
+    if (!checkPos3(endPos)) {
+        alert("结束坐标不正确!!");
+        return false;
+    }
+    let startPos = splitPos($("#id_setting_startPos").val(), ",，");
+    if (!checkPos3(startPos)) {
+        alert("结束坐标不正确!!");
+        return false;
+    }
+    let maxHeight = $("#id_setting_maxHeight").val();
+    if (maxHeight < 1) {
+        alert("运行最大高度不正确");
+        return false;
+    }
+    let flyTime = $("#id_setting_flyTime").val();
+    if (flyTime < 1) {
+        alert("运行时间不正确");
+        return false;
+    }
+    let index = $("#id_setting_net_index").val();
+    settingConfig.speed = speed;
+    settingConfig.destroyRate = destroyRate;
+    settingConfig.endPos = endPos;
+    for (let i = 0; i < 3; i++) {
+        settingConfig.startPos[index * 3 + i] = startPos[i];
+    }
+    settingConfig.maxHeight[index] = maxHeight;
+    settingConfig.flyTime[index] = flyTime;
+    return true;
+}
+
+function splitPos(val, s) {
+    let ans = [];
+    let copy = val.split(s.charAt(0));
+    for (let i = 0; i < copy.length; i++) {
+        let copy_copy = copy[i].split(s.charAt(1));
+        for (let j = 0; j < copy_copy.length; j++) {
+            ans.push(copy_copy[j]);
+        }
+    }
+    return ans;
+}
+
+function checkPos3(Pos) {
+    let re = /^[0-9]+.?[0-9]*$/;
+    // console.log(Pos)
+    if (Pos.length === 3 || Pos.length === 2) {
+        for (let i = 0; i < Pos.length; i++) {
+            if (!re.test(Pos[i])) {
+                return false;
+            }
+        }
+
+    } else {
+        return false;
+    }
+    return true;
+}
+
+function settingSelecOnChanged(obj) {
+    let index = obj.value;
+    showSettingConfig(settingConfig, index);
 }
 

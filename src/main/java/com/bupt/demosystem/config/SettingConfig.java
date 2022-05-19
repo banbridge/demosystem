@@ -24,6 +24,9 @@ public class SettingConfig {
     private double[] startPos;
     private int speed;
     private int[] nodeSize;
+    private int destroyRate;
+    private int numOfBadNode;
+    private int sumNode;
 
 
     public int[] getFlyTime() {
@@ -71,7 +74,38 @@ public class SettingConfig {
     }
 
     public void setNodeSize(int[] nodeSize) {
+
+        int count = sumNode * destroyRate / 100;
+        setNumOfBadNode(count);
         this.nodeSize = nodeSize;
+    }
+
+    public int getSumNode() {
+        return sumNode;
+    }
+
+    public void setSumNode(int sumNode) {
+        int sum = 0;
+        for (int ns : nodeSize) {
+            sum += ns;
+        }
+        this.sumNode = sum;
+    }
+
+    public int getDestroyRate() {
+        return destroyRate;
+    }
+
+    public void setDestroyRate(int destroyRate) {
+        this.destroyRate = destroyRate;
+    }
+
+    public int getNumOfBadNode() {
+        return numOfBadNode;
+    }
+
+    public void setNumOfBadNode(int numOfBadNode) {
+        this.numOfBadNode = numOfBadNode;
     }
 
     @Override
@@ -83,6 +117,8 @@ public class SettingConfig {
                 ", startPos=" + Arrays.toString(startPos) +
                 ", speed=" + speed +
                 ", nodeSize=" + Arrays.toString(nodeSize) +
+                ", destroyRate=" + destroyRate +
+                ", numOfBadNode=" + numOfBadNode +
                 '}';
     }
 }

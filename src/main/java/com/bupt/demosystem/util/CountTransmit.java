@@ -16,14 +16,18 @@ public class CountTransmit implements Serializable {
     private int[] recvSum;
     private Map<Integer, Integer> recv;
     private Map<Integer, Integer> send;
+    private int destroyNode;
+    private int totalNode;
+    private int size;
 
     public CountTransmit(int size) {
+        this.size = size;
         send = new HashMap<>();
         recv = new HashMap<>();
 
         sendSum = new int[size];
         recvSum = new int[size];
-
+        this.destroyNode = 0;
     }
 
     public void increaseSend(int start, int index) {
@@ -56,4 +60,47 @@ public class CountTransmit implements Serializable {
     public Map<Integer, Integer> getSend() {
         return send;
     }
+
+    public int getDestroyNode() {
+        return destroyNode;
+    }
+
+    public void setDestroyNode(int destroyNode) {
+        this.destroyNode = destroyNode;
+    }
+
+    public int getTotalNode() {
+        return totalNode;
+    }
+
+    public void setTotalNode(int totalNode) {
+        this.totalNode = totalNode;
+    }
+
+    public int getRate() {
+        return destroyNode * 100 / totalNode;
+    }
+
+    public boolean addCountTransmit(CountTransmit countTransmit) {
+        if (countTransmit == null || this.size != countTransmit.size) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            recvSum[i] += countTransmit.getRecvSum()[i];
+            sendSum[i] += countTransmit.getSendSum()[i];
+        }
+        return true;
+    }
+
+    public boolean divideCountTransmit(int n) {
+        if (n == 0) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            recvSum[i] /= n;
+            sendSum[i] /= n;
+        }
+        return true;
+    }
+
 }

@@ -70,7 +70,9 @@ public class ShortPath {
             int id = nodes.get(i).getId();
             //index[i] = id;
             map.put(id, i);
-
+        }
+        if (nodes.get(map.get(from)).getType() == -1 || nodes.get(map.get(to)).getType() == -1) {
+            return null;
         }
 
         boolean[] vis = new boolean[nodes.size()];
@@ -81,6 +83,7 @@ public class ShortPath {
         pathOne.add(from);
         pathQueue.offer(pathOne);
         if (from == to) {
+            pathOne.add(to);
             paths.add(pathOne);
             return paths;
         }

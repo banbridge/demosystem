@@ -3,7 +3,9 @@ package com.bupt.demosystem.easyexcel;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.bupt.demosystem.util.EasyExcelFileUtil;
+import com.bupt.demosystem.util.Group;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
@@ -13,6 +15,7 @@ import java.util.*;
  * @Date 2022/5/9 17:24
  */
 public class TestEasyExcel {
+
 
     @Test
     public void test() {

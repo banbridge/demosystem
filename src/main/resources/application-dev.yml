@@ -25,7 +25,7 @@ spring:
     password: 12345678
 
 file:
-  filename: data.xlsx
+  filename: data/data.xlsx
 
 setting:
   test: 100

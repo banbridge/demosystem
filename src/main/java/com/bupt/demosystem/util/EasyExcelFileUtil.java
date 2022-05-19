@@ -30,7 +30,7 @@ public class EasyExcelFileUtil {
         if (!upload.exists()) {
             upload.mkdirs();
         }
-        return upload.getAbsolutePath();
+        return upload.getAbsolutePath() + "/";
     }
 
 

@@ -71,7 +71,6 @@ public class Network {
             Node node = nodeList.get(n_id);
             node.setType((byte) -1);
         }
-
         return false;
     }
 }

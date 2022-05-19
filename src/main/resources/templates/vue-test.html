@@ -28,6 +28,12 @@
             width: 100%;
             margin: 1px;
         }
+
+        input,
+        select {
+            margin-left: 4px;
+            margin-top: 3px;
+        }
     </style>
 </head>
 
@@ -37,7 +43,7 @@
 
     </div>
 
-    <div class="infoview" style="overflow:auto;left:5px;right:auto; top:10px;max-height:40%;">
+    <div class="infoview" style="overflow:auto;left:5px;right:auto; top:10px; width:auto;max-height:40%;">
         <input class="btn btn-primary" id="btnStop" onclick="clickStopDemo()" type="button" value="停止"/>
         <input class="btn btn-primary" id="btnStart" type="button" onclick="clickStartDemo()" value="开始"/>
         <!--<input class="btn btn-primary" id="btnViewLine" type="button" value="查看连接线"/>-->
@@ -47,11 +53,11 @@
         <input class="btn" type="checkbox" id="id_switch_path" value="yes"/>
         <label class="form-check-label" for="id_switch_path">路径</label>
 
-
         <table class="mars-table tb-border">
             <tr>
-                <td class="nametd">时间：</td>
-                <td id="td_time" colspan="2"></td>
+                <td id="td_time" colspan="3">第 <strong id="id_xuhao_fangzhen">0</strong> 次仿真，共 <strong
+                        id="id_total_fangzhen">0</strong> 次仿真
+                </td>
             </tr>
             <tr>
                 <!--                <td class="nametd">经度：</td>-->
@@ -63,7 +69,9 @@
             </tr>
             <tr>
                 <td class="nametd">目标位置：</td>
-                <td id="td_position" colspan="2"></td>
+                <td colspan="2">
+                    <strong id="id_td_end_position"></strong>
+                </td>
             </tr>
             <tr>
                 <td class="nametd">总发送：
@@ -113,6 +121,7 @@
         <input class="btn btn-primary" id="btnGetData" onclick="getDataFromServer()" type="button" value="请求数据"/>
         <input class="btn btn-primary" id="btnDetroyNode" onclick="randomDestroyNode()" type="button" value="随机故障"/>
         <input class="btn btn-primary" id="btnCountTranmit" onclick="showCountTranmit()" type="button" value="业务统计"/>
+        <a class="btn btn-primary" href="/group/download">下载数据</a>
     </div>
 
 
@@ -138,7 +147,53 @@
     </div>
 
     <div class="infoview" id="id_setting"
-         style="overflow:auto; left:30%;right:auto; top:15%;max-height:40%;  display: none">
+         style="overflow:auto; left:30%; top:15%;max-height:60%; display: none">
+        <h4>运行配置信息</h4>
+        <div class="input-group">
+            <p class="text-white text-center">运行倍速: </p>
+            <input type="number" id="id_setting_spped" class="form-control" onchange="updateSettingConfig()"
+                   placeholder="Speed" value="1">
+        </div>
+
+        <div class="input-group">
+            <p class="text-white text-center">故障最大比例（百分制）: </p>
+            <input type="number" id="id_setting_destroyRate" class="form-control" onchange="updateSettingConfig()"
+                   placeholder="Speed" value="1">
+        </div>
+
+        <div class="">
+            <p class="text-white">结束坐标: </p>
+            <input type="text" class="form-control" onchange="updateSettingConfig()" id="id_setting_endPos"
+                   placeholder="结束坐标" value="120.492094, 25.874132, 00000">
+        </div>
+        <div class="input-group">
+            <strong class="text-white">群配置信息: </strong>
+            <select id="id_setting_net_index" onchange="settingSelecOnChanged(this)"
+                    aria-label="Default select example">
+            </select>
+        </div>
+
+        <div class="">
+            <p class="text-white">开始坐标: </p>
+            <input type="text" class="form-control" onchange="updateSettingConfig()" id="id_setting_startPos"
+                   placeholder="结束坐标" value="120.492094, 25.874132, 00000">
+        </div>
+
+        <div class="input-group">
+            <p class="text-white text-center">运行时间: </p>
+            <input type="number" class="form-control" onchange="updateSettingConfig()" id="id_setting_flyTime"
+                   placeholder="飞行时间" value="1">
+            <string>S</string>
+        </div>
+
+        <div class="input-group">
+            <p class="text-white text-center">最大高度: </p>
+            <input type="number" class="form-control" onchange="updateSettingConfig()" id="id_setting_maxHeight"
+                   placeholder="飞行时最大高度" value="1">
+            <string>m</string>
+        </div>
+
+        <input class="btn btn-primary" id="btnSubmitSetting" onclick="btnSubmitSettings()" type="button" value="提交配置"/>
 
     </div>
 
@@ -148,11 +203,35 @@
 
     </div>
 
-    <div class="infoview" style="overflow:auto; right:5px;left:auto; top:70px;max-height:55%;">
+    <div class="infoview" style="overflow:auto; right:5px;left:auto; top:18%;max-height:55%;">
 
         <ul class="ztree" id="treeOverlays"></ul>
     </div>
+    <!-- 面板 -->
+    <div class="infoview" style="overflow:auto; right:5px;left:auto; top:1%;">
+        <div>
+            <input type="button" class="btn btn-info" value="清除" onclick="removeAll()"/>
+            <!-- <input type="button" class="btn btn-info" value="结束(等同双击)" onclick="endDraw()" /> -->
+            <!-- <span style="color: #cad1d1;">提示：单击下面按钮激活绘制，按提示操作即可。</span> -->
 
+        </div>
+
+        <div>
+            <input type="button" class="btn btn-primary" value="空间距离" onclick="measureLength()"/>
+            <input type="button" class="btn btn-primary" value="水平面积" onclick="measureArea()"/>
+            <input type="button" class="btn btn-primary" value="高度差" onclick="measureHeight()"/>
+
+            <input type="button" class="btn btn-primary" value="坐标测量" onclick="measurePoint()"/>
+        </div>
+
+        <div>
+            <input type="button" class="btn btn-primary" value="贴地距离" onclick="measureSurfaceLength()"/>
+            <input type="button" class="btn btn-primary" value="贴地面积" onclick="measureSurfaceeArea()"/>
+            <input type="button" class="btn btn-primary" value="三角测量" onclick="measureTriangleHeight()"/>
+
+            <input type="button" class="btn btn-primary" value="方位角" onclick="measureAngle()"/>
+        </div>
+    </div>
 
 </div>
 

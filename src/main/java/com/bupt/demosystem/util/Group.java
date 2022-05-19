@@ -30,23 +30,30 @@ public class Group {
 
     //三个群的路径索引
     private int[] clusterPathIndex;
+    private double[] cellWidth = {0.09, 0.09, 0.13};
     String ipBase = "192.168.";
 
 
     private ArrayList<ArrayList<double[]>> pathData;
 
     private CountTransmit countTransmit;
+    private ArrayList<CountTransmit> allCountTransmit;
     private Map<Integer, Network> clusterToGroup;
+    private Map<Integer, Node> idToNode;
 
 
     //簇的存储
     private ArrayList<Cluster> groups;
+
+    // 记录破坏的节点数量，有个递增的过程
+    private int sizeOfDestroyedNode;
 
 
     public Group(SettingConfig settingConfig) {
         this.settingConfig = settingConfig;
         groups = new ArrayList<>(5);
         clusterToGroup = new HashMap<>();
+        idToNode = new HashMap<>();
         selectIndex = 0;
         initNetInfo();
     }
@@ -55,41 +62,44 @@ public class Group {
      * 进行一些初始化操作，或者重新请求仿真时候
      */
     public void initNetInfo() {
-        groups.clear();
-
-
-        NetCreateService netCreateService = new NetCreateService();
-        int[] nodeSize = settingConfig.getNodeSize();
-
-        for (int i = 1; i <= settingConfig.getFlyTime().length; i++) {
-            ArrayList<Network> nets = netCreateService.getNetworkList(nodeSize[i - 1], ipBase + i + ".", i);
-            Cluster cls = new Cluster();
-            cls.setCluster(nets);
-            //logger.info("------"+cls.getCluster().size());
-            groups.add(cls);
+        allCountTransmit = new ArrayList<>();
+        if (groups.size() < 1) {
+            int[] nodeSize = settingConfig.getNodeSize();
+            NetCreateService netCreateService = new NetCreateService();
+            for (int i = 1; i <= nodeSize.length; i++) {
+                ArrayList<Network> nets = netCreateService.getNetworkList(nodeSize[i - 1], ipBase + i + ".", i);
+                Cluster cls = new Cluster();
+                cls.setCluster(nets);
+                //logger.info("------"+cls.getCluster().size());
+                groups.add(cls);
+            }
+            updateClusterToGroup();
         }
-        updateClusterToGroup();
-
-        clusterPathIndex = new int[groups.size()];
         getPathData();
+        initSimulatorStatus();
+        sizeOfDestroyedNode = 0;
+    }
+
+    public void initSimulatorStatus() {
+        //logger.info("初始化为第"+getSizeOfDestroyedNode()+"次仿真");
+        clusterPathIndex = new int[groups.size()];
         for (int i = 0; i < groups.size(); i++) {
             int cnt = 1;
             for (Network network : groups.get(i).getCluster()) {
                 List<Node> nodes = network.getNodeList();
                 double[] poi = pathData.get(i).get(clusterPathIndex[i]);
                 for (Node node : nodes) {
-                    node.setLatitude(poi[1] + (node.getX() - 50) * 1.0 / 100 * 0.09);
-                    node.setLongitude(poi[0] + (node.getY() - 50) * 1.0 / 100 * 0.09);
+                    node.setLatitude(poi[1] + (node.getX() - 50) * 1.0 / 100 * cellWidth[i]);
+                    node.setLongitude(poi[0] + (node.getY() - 50) * 1.0 / 100 * cellWidth[i]);
                     node.setHeight(poi[2]);
                     node.setType(cnt);
                 }
                 nodes.get(0).setType(0);
                 network.setId(cnt++);
             }
-
-            clusterPathIndex[i]++;
         }
         countTransmit = new CountTransmit(3);
+        countTransmit.setTotalNode(settingConfig.getSumNode());
     }
 
     /**
@@ -106,22 +116,30 @@ public class Group {
     }
 
     public Cluster getSelectNetIndex() {
+
         return groups.get(selectIndex);
     }
 
     public void setSelectNet(Cluster cls) {
+        int sum = 0;
         for (Network network : cls.getCluster()) {
+            sum += network.getNodeList().size();
+            int cnt = 0;
             for (Node node : network.getNodeList()) {
-                node.setIp(String.format("%s%d.%d", ipBase, selectIndex + 1, node.getId()));
+                node.setIp(String.format("%s%d.%d", ipBase, selectIndex + 1, cnt++));
             }
         }
-        updateClusterToGroup();
         groups.set(selectIndex, cls);
+        updateClusterToGroup();
+        initSimulatorStatus();
+        int[] nodeSize = settingConfig.getNodeSize();
+        nodeSize[selectIndex] = sum;
+        settingConfig.setNodeSize(nodeSize);
     }
 
     private void updateClusterToGroup() {
         clusterToGroup.clear();
-
+        idToNode.clear();
         for (int i = 0; i < groups.size(); i++) {
             double val = 0;
             int size = 0;
@@ -132,6 +150,7 @@ public class Group {
                 size += net.getNodeList().size();
                 for (Node node : net.getNodeList()) {
                     clusterToGroup.put(node.getId(), net);
+                    idToNode.put(node.getId(), node);
                 }
                 net.setId(cnt++);
             }
@@ -176,55 +195,84 @@ public class Group {
     }
 
     /**
+     * 破坏n个节点
+     */
+    public Integer[] destroyNNodes(int n) {
+        Integer[] ids = clusterToGroup.keySet().toArray(new Integer[0]);
+        n = Math.min(n, ids.length);
+        Random rand = new Random();
+        for (int i = 1; i <= n; i++) {
+            int id_index = rand.nextInt(ids.length - i);
+            //System.out.println(id_index);
+            destroyNode(ids[id_index]);
+            swap(ids, ids.length - i, id_index);
+        }
+        Integer[] ans = Arrays.copyOfRange(ids, ids.length - n, ids.length);
+        logger.info(String.format("故障%d个节点，故障节点id为%s\n", n, Arrays.toString(ans)));
+        return ids;
+    }
+
+    private <T> void swap(T[] ids, int i, int j) {
+        T tem = ids[i];
+        ids[i] = ids[j];
+        ids[j] = tem;
+    }
+
+    /**
      * 根据簇的id和节点id毁坏节点
      *
      * @param n_id
      */
     public boolean destroyNode(int n_id) {
-
-
-        Network net = clusterToGroup.get(n_id);
-
-        if (net == null) {
-            return net.destroy(n_id);
+        Node node = idToNode.get(n_id);
+        //logger.info(String.format("故障节点id为%d, 地址为:%s\n", n_id, node));
+        if (node != null) {
+            node.setType(-1);
+            return true;
         }
-
-
         return false;
     }
 
 
-    public synchronized boolean moveNodeCluster() {
+    /**
+     * 返回-1表示此轮仿真结束，进行初始化操作，
+     * 返回-2表示所有的仿真结束
+     * 返回大于等于0的时候表示此轮破坏多少个节点
+     *
+     * @return
+     */
+    public synchronized int moveNodeCluster() {
         int count = 0;
         for (int i = 0; i < pathData.size(); i++) {
-            if (clusterPathIndex[i] < pathData.get(i).size()) {
+            if (clusterPathIndex[i] < pathData.get(i).size() - 1) {
                 count++;
             }
         }
         if (count == 0) {
-
-            return false;
-        }
-        for (int i = 0; i < groups.size(); i++) {
-            if (clusterPathIndex[i] >= pathData.get(i).size()) {
-                continue;
+            allCountTransmit.add(countTransmit);
+            if (sizeOfDestroyedNode == settingConfig.getNumOfBadNode()) {
+                return -2;
+            } else {
+                sizeOfDestroyedNode++;
+                initSimulatorStatus();
+                destroyNNodes(sizeOfDestroyedNode);
+                return -1;
             }
 
+        }
+        logger.info("pathIndex: " + Arrays.toString(clusterPathIndex) + sizeOfDestroyedNode + "," + settingConfig.getNumOfBadNode());
+        for (int i = 0; i < groups.size(); i++) {
+            clusterPathIndex[i] = Math.min(clusterPathIndex[i] + settingConfig.getSpeed(), pathData.get(i).size()-1);
             ArrayList<Network> networks = groups.get(i).getCluster();
             for (Network net : networks) {
                 List<Node> nodeList = net.getNodeList();
-                double[] location = pathData.get(i).get(clusterPathIndex[i]);
-                double[] pre_location = pathData.get(i).get(clusterPathIndex[i] - 1);
-                double lat, lon, hei;
+                double[] poi = pathData.get(i).get(clusterPathIndex[i]);
                 Node ch = null;
                 for (Node node : nodeList) {
                     if (node.getType() != -1) {
-                        lon = node.getLongitude() + location[0] - pre_location[0] + (Math.random() - 0.5) * 0.002;
-                        lat = node.getLatitude() + location[1] - pre_location[1] + (Math.random() - 0.5) * 0.002;
-                        hei = node.getHeight() + location[2] - pre_location[2] + (Math.random() - 0.5) * 100;
-                        node.setLatitude(lat);
-                        node.setLongitude(lon);
-                        node.setHeight(hei);
+                        node.setLatitude(poi[1] + (node.getX() - 50) * 1.0 / 100 * cellWidth[i]);
+                        node.setLongitude(poi[0] + (node.getY() - 50) * 1.0 / 100 * cellWidth[i]);
+                        node.setHeight(poi[2]);
                         if (ch == null || ch.getEdges().size() < node.getEdges().size()) {
                             ch = node;
                         }
@@ -234,10 +282,59 @@ public class Group {
                 }
                 assert ch != null;
                 ch.setType(0);
+                net.setClusterId(ch.getId());
             }
-            clusterPathIndex[i]++;
+
         }
-        return true;
+        return sizeOfDestroyedNode;
+    }
+
+
+    /**
+     * 重复仿真多少次
+     *
+     * @param n
+     * @return
+     */
+    public ArrayList<CountTransmit> simulatorTimes(int n) {
+        ArrayList<CountTransmit> countTransmits = new ArrayList<>();
+
+        int dataNumber = 170;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j <= settingConfig.getNumOfBadNode(); j++) {
+                //初始化节点信息
+                initSimulatorStatus();
+                //移动一次 更新簇首信息
+                moveNodeCluster();
+                //破坏J个节点
+                Integer[] ids = destroyNNodes(j);
+                Random ran = new Random();
+                for (int k = 0; k < dataNumber; k++) {
+                    int len = ids.length - 1;
+                    int cccc = ran.nextInt(100);
+                    if (cccc < 90) {
+                        len = len - j;
+                    }
+                    int index = ran.nextInt(len);
+                    int start = ids[index];
+                    index = ran.nextInt(len);
+                    int end = ids[index];
+                    getPathCount(start, end);
+                }
+                this.countTransmit.setDestroyNode(j);
+                if (i == 0) {
+                    countTransmits.add(getCountTransmit());
+                } else {
+                    countTransmits.get(j).addCountTransmit(getCountTransmit());
+
+                }
+            }
+        }
+        for (int j = 0; j <= settingConfig.getNumOfBadNode(); j++) {
+            countTransmits.get(j).divideCountTransmit(n);
+        }
+        logger.info(String.format("仿真%d次，仿真参数为：%s \n", n, settingConfig.toString()));
+        return countTransmits;
     }
 
 
@@ -312,6 +409,14 @@ public class Group {
         if (networkEnd == null || networkStart == null) {
             return null;
         }
+        if (start == end) {
+            ArrayList<LinkedList<Integer>> ans = new ArrayList<>();
+            LinkedList<Integer> list = new LinkedList<>();
+            list.add(start);
+            list.add(end);
+            ans.add(list);
+            return ans;
+        }
         if (networkEnd == networkStart) {
             return ShortPath.multiPathList(networkStart, start, end);
         }
@@ -319,7 +424,7 @@ public class Group {
         int end_c = networkEnd.getClusterId();
         ArrayList<LinkedList<Integer>> path1 = ShortPath.multiPathList(networkStart, start, start_c);
         ArrayList<LinkedList<Integer>> path2 = ShortPath.multiPathList(networkEnd, end_c, end);
-        if (path1.size() < 1 || path2.size() < 1) {
+        if (path1 == null || path2 == null || path1.size() < 1 || path2.size() < 1) {
             return null;
         }
         ArrayList<LinkedList<Integer>> ans = new ArrayList<>();
@@ -337,7 +442,7 @@ public class Group {
         int cid2 = clusterToGroup.get(end).getId() - 1;
         int index = cid1 == cid2 ? 1 : 2;
         countTransmit.increaseSend(start, index);
-        if (ans.size() < 1 || ans.get(0).size() < 2) {
+        if (ans == null || ans.size() < 1 || ans.get(0).size() < 2) {
             return null;
         }
         countTransmit.increaseRecv(start, index);
@@ -358,4 +463,23 @@ public class Group {
         }
         return allNets;
     }
+
+    public ArrayList<CountTransmit> getAllCountTransmit() {
+        return allCountTransmit;
+    }
+
+    public void setAllCountTransmit(ArrayList<CountTransmit> allCountTransmit) {
+        this.allCountTransmit = allCountTransmit;
+    }
+
+    public int getSizeOfDestroyedNode() {
+        return sizeOfDestroyedNode;
+    }
+
+
+}
+
+
+enum Status {
+    init, stop, run
 }
