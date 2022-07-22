@@ -23,14 +23,12 @@ public class Group {
 
     private final SettingConfig settingConfig;
 
-    private final int SIZEOFNET = 3;
-
     private int selectIndex;
     public Logger logger = LoggerFactory.getLogger(Group.class);
 
     //三个群的路径索引
     private int[] clusterPathIndex;
-    private double[] cellWidth = {0.09, 0.09, 0.13};
+    private final double[] cellWidth = {0.09, 0.09, 0.13};
     String ipBase = "192.168.";
 
 
@@ -261,8 +259,9 @@ public class Group {
 
         }
         logger.info("pathIndex: " + Arrays.toString(clusterPathIndex) + sizeOfDestroyedNode + "," + settingConfig.getNumOfBadNode());
+        moveNodeIndex();
         for (int i = 0; i < groups.size(); i++) {
-            clusterPathIndex[i] = Math.min(clusterPathIndex[i] + settingConfig.getSpeed(), pathData.get(i).size()-1);
+
             ArrayList<Network> networks = groups.get(i).getCluster();
             for (Network net : networks) {
                 List<Node> nodeList = net.getNodeList();
@@ -287,6 +286,15 @@ public class Group {
 
         }
         return sizeOfDestroyedNode;
+    }
+
+    /**
+     * 更新移动的下标保证同时到达终点
+     */
+    private void moveNodeIndex() {
+        for (int i = 0; i < clusterPathIndex.length; i++) {
+            clusterPathIndex[i] = Math.min(clusterPathIndex[i] + settingConfig.getSpeed(), pathData.get(i).size() - 1);
+        }
     }
 
 
@@ -451,9 +459,7 @@ public class Group {
 
     public double getParabola(int index, int len) {
         int fenzi = index - len;
-        int fenmu = len;
-        double ans = 1 - fenzi * fenzi * 1.0 / (fenmu * fenmu);
-        return ans;
+        return 1 - fenzi * fenzi * 1.0 / (len * len);
     }
 
     public List<Network> getAllNetWork() {
@@ -477,9 +483,4 @@ public class Group {
     }
 
 
-}
-
-
-enum Status {
-    init, stop, run
 }

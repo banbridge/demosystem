@@ -5,7 +5,6 @@ import com.bupt.demosystem.config.SettingConfig;
 import com.bupt.demosystem.entity.Network;
 import com.bupt.demosystem.service.NetCreateService;
 import com.bupt.demosystem.util.CountTransmit;
-import com.bupt.demosystem.util.EasyExcelFileUtil;
 import com.bupt.demosystem.util.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

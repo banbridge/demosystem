@@ -9,6 +9,7 @@ let wsCreateHandler = null;
 
 let map = null;
 let viewer = null;
+let measure = null;
 
 let graphicLayer = null;
 let center_point = [119.75, 26.38, 1000];
@@ -126,15 +127,40 @@ function mapInit() {
     // 清除默认的第一个影像 bing地图影像
     viewer.imageryLayers.remove(viewer.imageryLayers.get(0))
 
-    let layer_net = new Cesium.WebMapTileServiceImageryProvider({
-        url:
-            "https://t0.tianditu.gov.cn/ibo_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=ibo&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=8b207a527da69c7a32f636801fa194d4",
-        layer: "tiandituImg",
-        style: "default",
-        format: "image/jpeg",
-        tileMatrixSetID: "tiandituImg",
-        maximumLevel: 16
-    })
+    const tileXYToQuadKey = function (x, y, level) {
+        var quadkey = "";
+        for (var i = level; i >= 0; --i) {
+            var bitmask = 1 << i;
+            var digit = 0;
+
+            if ((x & bitmask) !== 0) {
+                digit |= 1;
+            }
+
+            if ((y & bitmask) !== 0) {
+                digit |= 2;
+            }
+
+            quadkey += digit;
+        }
+        if (quadkey[0] === '0') {
+            quadkey = quadkey.substr(1);
+        }
+        return quadkey;
+    };
+
+    let layer_net = new Cesium.UrlTemplateImageryProvider({
+        url: 'https://ecn.t{s}.tiles.virtualearth.net/tiles/a{q}.jpeg?n=z&g=11404',
+        subdomains: ['0', '1', '2', '3'],
+        tilingScheme: new Cesium.WebMercatorTilingScheme(),
+        customTags: {
+            q: function (imageryProvider, x, y, level) {
+                const result = tileXYToQuadKey(x, y, level);
+                console.log(imageryProvider, x, y, level, result);
+                return result;
+            },
+        },
+    });
     //离线图层
     let layer_lixian = new Cesium.UrlTemplateImageryProvider({
         url: "http://127.0.0.1:8089/{z}/{x}/{y}.png",
@@ -193,7 +219,7 @@ function mapInit() {
             defaultContextMenu: true,
             mouseDownView: false,
             compass: {
-                bottom: "100px",
+                bottom: "200px",
                 right: "5px"
             },
             distanceLegend: {
@@ -210,10 +236,30 @@ function mapInit() {
 
     });
 
+    measure = new mars3d.thing.Measure({
+        label: {
+            color: "rgba(237,8,8,0.93)",
+            font_family: "楷体",
+            font_size: 25,
+            background: false,
+        },
+    })
+    map.addThing(measure)
     graphicLayer = new mars3d.layer.GraphicLayer();
     map.addLayer(graphicLayer);
     map.clock.shouldAnimate = false;
 
+}
+
+function btnMeasureLength() {
+    measure.distance({
+        showAddText: true,
+        // style: {
+        //   color: '#ffff00',
+        //   width: 3,
+        //   clampToGround: false //是否贴地
+        // }
+    });
 }
 
 function btnSubmitSettings() {
@@ -283,6 +329,66 @@ function clickStopDemo() {
         })
 }
 
+function removeAll() {
+    measure.clear();
+}
+
+// 贴地距离
+function measureSurfaceLength() {
+    measure.distanceSurface({
+        showAddText: true,
+        // unit: 'm', //支持传入指定计量单位
+        // style: {
+        //   color: '#ffff00',
+        //   width: 3,
+        //   clampToGround: true //是否贴地
+        // }
+    });
+}
+
+// 水平面积
+function measureArea() {
+    measure.area({
+        // style: {
+        //   color: '#00fff2',
+        //   opacity: 0.4,
+        //   outline: true,
+        //   outlineColor: '#fafa5a',
+        //   outlineWidth: 1,
+        //   clampToGround: false //贴地
+        // }
+    });
+}
+
+// 贴地面积
+function measureSurfaceeArea() {
+    measure.areaSurface({
+        style: {
+            color: "#ffff00",
+        },
+        splitNum: 10, //step插值分割的个数
+    });
+}
+
+// 高度差
+function measureHeight() {
+    measure.height();
+}
+
+// 三角测量
+function measureTriangleHeight() {
+    measure.heightTriangle();
+}
+
+// 方位角
+function measureAngle() {
+    measure.angle();
+}
+
+// 坐标测量
+function measurePoint() {
+    measure.point();
+}
 
 // 得到两个节点之间的QOS最好的路径
 function sendRequestPath(start, end) {
